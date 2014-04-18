@@ -1,0 +1,10 @@
+[info]
+name="Flickr Import"
+author="Ned Henry"
+description="Adds the ability to import Flickr photosets and galleries into Omeka as items or collections, while preserving as much metadata as possible"
+license="GPLv3"
+link=""
+support_link=""
+omeka_minimum_version="2.1"
+omeka_target_version="2.1"
+version="1.0.0"
