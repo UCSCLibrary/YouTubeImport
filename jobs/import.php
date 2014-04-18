@@ -14,27 +14,32 @@
 //class YoutubeImport_ImportJob
 class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 {
-  private static $flickr_api_key = 'a664b4fdddb9e009f43e8a6012b1a392';
+  public static $youtube_api_key = '';
   private $url;
   private $type;
-  private $setID;
+  private $videoID;
   private $collection=0;    //create new colllection by default
   private $selecting=false;  //import all images in set by default
   private $selected=array();
   private $public = false;  //create private omeka items by default
-  private $ownerRole = 37; //flickr owner is contributor by default
-  private $f;
+  private $ownerRole = 37; //youtube owner is contributor by default
+  private $service;
   
 
   public function perform()
   {
     Zend_Registry::get('bootstrap')->bootstrap('Acl');
+    
+  	require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Client.php';
+    require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Services' . DIRECTORY_SEPARATOR . 'YouTube.php';
 
-    require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'phpFlickr' . DIRECTORY_SEPARATOR . 'phpFlickr.php';
-
-    $this->f = new phpFlickr(self::$flickr_api_key);
-
-    $this->setID = $this->_parseURL();
+    $client = new Google_Client();
+  	$client->setApplicationName("Omeka _Youtube_Import");
+  	$client->setDeveloperKey(self::$youtube_api_key);
+  	
+  	$this->service = new Google_Service_YouTube($client);
+    
+    $this->videoID = $this->_parseURL();
 
     if($this->collection == 0)
       $this->collection = $this->_makeDuplicateCollection($this->type);
@@ -92,41 +97,24 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     $this->ownerRole = $role;
   }
 
-  public function setType($type)
-  {
-    $this->type = $type;
-  }
-
   private function _parseURL()
   {
-    if ($this->type=='photoset')
-      {
-	$arr = explode('/',$this->url);
-	$setID = $arr[count($arr)-2];
-      }
-    else if ($this->type=='gallery')
-      {
-	$response = $this->f->urls_lookupGallery($this->url);
-	//print_r($response);
-	//die();
-	if($response['stat']=="ok")
-	  $setID = $response['gallery']['id'];
-	else
-	  $setID =-1;
-      }
-    return($setID);
+	$videoID="";
+	//TODO get youtube video ID from url
+    return($videoID);
   }
 
-  private function _getPhotoIDs($type='unknown')
+  private function _getVideoIDs($type='unknown')
   {
+	  /*
     $ids=array();
 
-    $list = $this->f->photosets_getPhotos($this->setID);
+    $list = $this->f->photosets_getPhotos($this->videoID);
 
     if(empty($list) || ( $list['stat']=='fail' && $list['err']['code']==1 ) )
       {
 	//photoset not found on flickr. Check if it's a gallery
-	$response = $this->f->galleries_getPhotos($this->setID);
+	$response = $this->f->galleries_getPhotos($this->videoID);
 	$list['photoset']=$response['photos'];
       }
 
@@ -136,37 +124,19 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
       }
 
     return $ids;
+    */
   }
 
-  private function _getPhotoFiles($itemID)
+  public static function GetVideoPost($itemID,$service,$collection=0,$ownerRole=0,$public=0)
   {
-
-    $sizes = $this->f->photos_getSizes($itemID);
-    $files = array();
-    $i=0;
-    foreach($sizes as $file)
-      {
-	if($file['label']=='Original')
-	  {
-	    $files[]=$file['source'];
-	  }
-	//TODO maybe do something with Flickr derivative images?
-      }
-
-    return($files);
-  }
-
-
-  private function _getPhotoPost($itemID)
-  {
-    $response = $this->f->photos_getInfo($itemID);
+    $response = $service->photos_getInfo($itemID);
     if($response['stat']=="ok")
       $photoInfo = $response['photo'];
     else
-      die("Error retrieving info from Flickr: ".$response['stat']);
+      die("Error retrieving info from youtube: ".$response['stat']);
 
     $licenses=array();
-    $licenseArray = $this->f->photos_licenses_getInfo();
+    $licenseArray = $service->photos_licenses_getInfo();
     foreach($licenseArray as $license)
       {
 	$licenses[$license['id']]=$license['name'];
@@ -191,6 +161,9 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 	break;
 	  
       }
+      
+      //todo: get element ID of player element we added on install
+      
 
     $maps = array(
 		  50=>array($photoInfo['title']),
@@ -202,28 +175,31 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 		  7=>array($photoInfo['originalformat'])
 		  );
 
-    if($this->ownerRole > 0)
+    if($ownerRole > 0)
       {
         if($photoInfo['owner']['realname']!="")
-	  $maps[$this->ownerRole] = $photoInfo['owner']['realname'];
+	  $maps[$ownerRole] = array("Name: ".$photoInfo['owner']['realname'].'  Flickr username: '.$photoInfo['owner']['username']);
 	else
-	  $maps[$this->ownerRole] = $photoInfo['owner']['username'];
-
+	  $maps[$ownerRole] = array('Flickr username: '.$photoInfo['owner']['username']);
+	
       }
+    //print_r($maps);
+    //die();
       
     $Elements = array();
     foreach ($maps as $elementID => $elementTexts)
       {
 	foreach($elementTexts as $elementText)
 	  {
+	    $text = $elementText;
+
+	    //check for html tags
 	    if($elementText != strip_tags($elementText)) {
 	      //element text has html tags
-	      $text = "";
-	      $html = $elementText;
+	      $html = "1";
 	    }else {
 	      //plain text or other non-html object
-	      $html = "";
-	      $text = $elementText;
+	      $html = "0";
 	    }
 
 	    $Elements[$elementID] = array(array(
@@ -247,9 +223,9 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 			 'item_type_id'=>'6',      //a still image
 			 'tags-to-add'=>$tags,
 			 'tags-to-delete'=>'',
-			 'collection_id'=>$this->collection
+			 'collection_id'=>$collection
 			 );
-    if($this->public)
+    if($public)
       $returnArray['public']="1";
 
     return($returnArray );
@@ -263,11 +239,11 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 
     if($type=="photoset")
       {
-	$setInfo = $this->f->photosets_getInfo($this->setID);
+	$setInfo = $this->f->photosets_getInfo($this->videoID);
       }
     else if ($type=="gallery")
       {
-	$response = $this->f->galleries_getInfo($this->setID);
+	$response = $this->f->galleries_getInfo($this->videoID);
 
 	if($response['stat']=="ok")
 	  $setInfo=$response['gallery'];
@@ -324,9 +300,9 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 
   private function _addPhoto($itemID)
   {
-    $post = $this->_getPhotoPost($itemID);
+    $post = self::GetPhotoPost($itemID,$this->f,$this->collection,$this->ownerRole,$this->public);
       
-    $files = $this->_getPhotoFiles($itemID);
+    $files = self::GetPhotoFiles($itemID);
 
     $record = new Item();
 

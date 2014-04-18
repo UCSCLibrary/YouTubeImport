@@ -14,3 +14,11 @@
 #previewThumbs {
     border: 1pm solid black;
 }
+
+#youtube-number-div {
+	display:none;	
+}
+
+#youtube-select-div {
+	display:none;	
+}
