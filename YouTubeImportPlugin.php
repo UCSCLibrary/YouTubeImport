@@ -59,32 +59,21 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   }
 
   public function hookInstall(){
-    $this->addItemType();
-  
-  }
 
-  public function hookPublicItemsShow($args)
-  {
-
-  
     $db = get_db();
     $table = $db->getTable('ItemType');
 
+    //todo check if exists (both the moving image type and the player element)
     $mpType = $table->findByName('Moving Image');
-    print_r($mpType);
-    die();
-
-    $item=$args['item'];
-    $rv="";
-    $itemType = $item->getItemType();
-    if($itemType->name=="Embedded Video")
-      {
-	$elements = $item->getItemTypeElements();
-	$elementTexts = $item->getElementTextsByRecord($elements['Embed html']);
-	die("text: ".$elementTexts[0]->text);
-      }
+    $mpType->addElements(array(
+			       array(
+				     'name'=>'Player',
+				     'description'=>'html for embedded player to stream video content'
+				     )
+			       ));
+    $mpType->save();
+  
   }
-
 
   /**
    * Define the plugin's access control list.
