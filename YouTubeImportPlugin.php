@@ -17,7 +17,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
      * @var array Hooks for the plugin.
      */
     //protected $_hooks = array('admin_head');
-  protected $_hooks = array('initialize','define_acl','admin_head','public_items_show');
+  protected $_hooks = array('initialize','define_acl','admin_head');
 
   /**
    * @var array Filters for the plugin.

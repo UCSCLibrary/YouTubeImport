@@ -39,6 +39,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
   	
   	$this->service = new Google_Service_YouTube($client);
     
+	/*
     $this->videoID = $this->_parseURL();
 
     if($this->collection == 0)
@@ -64,6 +65,8 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
       }
 
     //log the list of added items maybe? Or check whether we got them all?
+
+    */
   }
 
   
@@ -96,14 +99,14 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
   {
     $this->ownerRole = $role;
   }
-
+  /*
   private function _parseURL()
   {
 	$videoID="";
 	//TODO get youtube video ID from url
     return($videoID);
   }
-
+  */
   private function _getVideoIDs($type='unknown')
   {
 	  /*
@@ -127,64 +130,43 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     */
   }
 
-  public static function GetVideoPost($itemID,$service,$collection=0,$ownerRole=0,$public=0)
+  public static function GetVideoPost($itemID,$service,$collection=0,$public=0)
   {
-    $response = $service->photos_getInfo($itemID);
-    if($response['stat']=="ok")
-      $photoInfo = $response['photo'];
+
+    $part = "id,snippet,contentDetails,fileDetails,liveStreamingDetails,player,processingDetails, recordingDetails,topicDetails";
+    $response = $service->videos->listVideos($part, array('id'=>$itemID));
+
+    if (empty($response)) {
+      die('twarrrr! no video found.');
+    }
+
+    //todo format date if necessary
+    $date = $video['snippet']['publishedAt'];
+
+    $video = $response[0];
+
+    if($video['contentDetails']['licensedContent'])
+      $license = $video['status']['license'];
     else
-      die("Error retrieving info from youtube: ".$response['stat']);
+      $license = "No known license or copyright restrictions";
 
-    $licenses=array();
-    $licenseArray = $service->photos_licenses_getInfo();
-    foreach($licenseArray as $license)
-      {
-	$licenses[$license['id']]=$license['name'];
-      }
+    //todo: get element ID of player element we added on install
 
-    $datetimetaken = $photoInfo['dates']['taken'];
-    $granularity = $photoInfo['dates']['takengranularity'];
-
-    switch($granularity)
-      {
-      case 0:
-	$date = date('Y-m-d H:i:s',strtotime($datetimetaken));
-	break;
-      case 4:
-	$date = date('Y-m',strtotime($datetimetaken));
-	break;
-      case 6:
-	$date = date('Y',strtotime($datetimetaken));
-	break;
-      case 8:
-	$date = "circa ".date('Y',strtotime($datetimetaken));
-	break;
-	  
-      }
-      
-      //todo: get element ID of player element we added on install
-      
+    //todo: pull any other relevant metadata from the video resource 
+    //https://developers.google.com/youtube/v3/docs/videos
+    //and map it to omeka elements
 
     $maps = array(
-		  50=>array($photoInfo['title']),
-		  41=>array($photoInfo['description']),
-		  40=>array($date),
-		  47=>array($licenses[$photoInfo['license']]),//rights
-		  46=>array(),
-		  42=>array(),
-		  7=>array($photoInfo['originalformat'])
+		  50=>array($video['snippet']['title']), //title
+		  41=>array($video['snippet']['description']), //description
+		  40=>array($date),  //date
+		  48=>array('http://YouTube.com'), //source
+		  47=>array($license),//rights
+		  42=>array("File type: ".$video['fileDetails']['fileType']."  Container: ".$video['fileDetails']['container']),  // format
 		  );
 
-    if($ownerRole > 0)
-      {
-        if($photoInfo['owner']['realname']!="")
-	  $maps[$ownerRole] = array("Name: ".$photoInfo['owner']['realname'].'  Flickr username: '.$photoInfo['owner']['username']);
-	else
-	  $maps[$ownerRole] = array('Flickr username: '.$photoInfo['owner']['username']);
-	
-      }
-    //print_r($maps);
-    //die();
+    $playerElement = get_element_by_name('Player');
+    $maps[$playerElement->id]=array($video['player']['embedHtml']);
       
     $Elements = array();
     foreach ($maps as $elementID => $elementTexts)
@@ -210,9 +192,9 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
       }
 
     $tags = "";
-    foreach($photoInfo['tags']['tag'] as $tag)
+    foreach($video['tags'] as $tag)
       {
-	$tags .= $tag['raw'];
+	$tags .= $tag;
 	$tags .=",";
       }
 
@@ -220,7 +202,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 
     $returnArray = array(
 			 'Elements'=>$Elements,
-			 'item_type_id'=>'6',      //a still image
+			 'item_type_id'=>'3',      //a moving image
 			 'tags-to-add'=>$tags,
 			 'tags-to-delete'=>'',
 			 'collection_id'=>$collection
