@@ -23,7 +23,6 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
   private $selecting=false;  //import all images in set by default
   private $selected=array();
   private $public = false;  //create private omeka items by default
-  private $ownerRole = 37; //youtube owner is contributor by default
   private $service;
   
 
@@ -97,11 +96,6 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     $this->public = $public;
   }
 
-  public function setUserRole($role)
-  {
-    $this->ownerRole = $role;
-  }
-  
   public static function ParseURL($url)
   {
     $strings = explode("/",$url);
@@ -154,10 +148,28 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     //todo format date if necessary
     $date = $video['snippet']['publishedAt'];
 
-    if($video['contentDetails']['licensedContent'])
-      $license = $video['status']['license'];
-    else
-      $license = "No known license or copyright restrictions";
+
+    if(isset($video['status']['license']))
+      {
+	switch($video['status']['license']) 
+	  {
+	  case "youtube":
+	    $license = '<a href="https://www.youtube.com/static?template=terms">Standard YouTube License</a>';
+	    break;
+
+	  case "creativeCommon":
+	      $license='<a href="http://creativecommons.org/licenses/by/3.0/legalcode">Creative Commons License</a>';
+	    break;
+
+	  default:
+	    $license="";
+
+	  }
+      }
+    
+
+    if ($video['contentDetails']['licensedContent'])
+      $license .= "<br>This video represents licensed content on YouTube, meaning that the content has been claimed by a YouTube content partner.";
 
     //todo: get element ID of player element we added on install
 
@@ -181,7 +193,9 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     $table = $db->getTable('Element');
     $playerElement = $table->findByElementSetNameAndElementName(ElementSet::ITEM_TYPE_NAME,'Player');
 
-    $maps[$playerElement->id]=array($video['player']['embedHtml']);
+    $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
+
+    $maps[$playerElement->id]=array($playerHtml);
       
     $Elements = array();
     foreach ($maps as $elementID => $elementTexts)
@@ -207,14 +221,19 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
       }
 
     $tags = "";
-    foreach($video['snippet']->tags as $tag)
+    if(isset($video['snippet']['tags']))
+      die('well fuck');
+    if(isset($video['snippet']->tags))
       {
-	$tags .= $tag;
-	$tags .=",";
+    
+	foreach($video['snippet']->tags as $tag)
+	  {
+	    $tags .= $tag;
+	    $tags .=",";
+	  }
+    
+	$tags = substr($tags,0,-2);
       }
-
-    $tags = substr($tags,0,-2);
-
     $returnPost = array(
 			 'Elements'=>$Elements,
 			 'item_type_id'=>'3',      //a moving image
@@ -233,7 +252,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 	if($file['width']>$maxwidth)
 	  $i = $key;
       }
-    $returnFiles = array($video['snippet']->thumbnails->standard->url);
+    $returnFiles = array($video['snippet']->thumbnails->default->url);
 
     return(array(
 		 'post' => $returnPost,

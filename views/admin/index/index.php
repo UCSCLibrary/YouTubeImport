@@ -49,19 +49,8 @@ if(!isset($this->collection))
 </div>
    <div class="inputs three columns omega">
    <?php echo $this->formSelect('youtube-collection',$this->collection,array('id' => 'youtube-collection'),$this->form_collection_options); ?>
-<p class="explanation"><?php echo __( 'To which collection would you like to add the youtube video?' ); ?></p>
+<p class="explanation"><?php echo __( 'To which collection would you like to add the YouTube video?' ); ?></p>
    </div>
-</div>
-
-<div class="field">
- <div id="youtube-userrole-label" class="two columns alpha">
-<label for="youtube-userrole"><?php echo __('User Role'); ?></label>
-</div>
-   <div class="inputs three columns omega">
-   <?php echo $this->formSelect('youtube-userrole',"37",array('id' => 'youtube-userrole'),$this->form_userrole_options); ?>
-<p class="explanation"><?php echo __( 'What role should the Youtube user have in the imported Omeka item metadata?' ); ?></p>
-   </div>
-
 </div>
 
 <div class="field">
@@ -70,7 +59,7 @@ if(!isset($this->collection))
 </div>
 <div id="youtube-public-div" class="inputs three columns alpha">
 <input type="checkbox" name="youtube-public" value="1" checked="checked"/>
-<p class="explanation"><?php echo __( 'Would you like to make the new items public?' ); ?></p>
+<p class="explanation"><?php echo __( 'Would you like to make the video public in Omeka?' ); ?></p>
 </div>
 </div>
 
@@ -78,7 +67,7 @@ if(!isset($this->collection))
 <div class="field" id="previewThumbs"></div>
 
 <div class="field">
-<button name="youtube-import-submit" type="submit">Import photos</button>
+<button name="youtube-import-submit" type="submit">Import Video</button>
 </div>
 
 

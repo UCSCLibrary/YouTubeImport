@@ -27,8 +27,6 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
       }
 
     $this->view->form_collection_options = $this->_getFormCollectionOptions();
-    $this->view->form_userrole_options = $this->_getFormUserRoleOptions();
-
       
   }
 
@@ -140,7 +138,7 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
   private function _getFormCollectionOptions()
   {
     $collections = get_records('Collection',array(),'0');
-    $options = array('0'=>'Create New Collection');
+    $options = array('0'=>'No Collection');
     foreach ($collections as $collection)
       {
 	if(isset($collection->getElementTexts('Dublin Core','Title')[0]))
@@ -152,21 +150,6 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
     return $options;
   }
 
-  /**
-   * Get an array to be used in formSelect() containing possible roles for users.
-   * 
-   * @return array
-   */
-  private function _getFormUserRoleOptions()
-  {
-    $options = array(
-		     '0'=>'No Role',
-		     '37'=>'Contributor',
-		     '39'=>'Creator',
-		     '45'=>'Publisher'
-		     );
-    return $options;
-  }
 
 
 }

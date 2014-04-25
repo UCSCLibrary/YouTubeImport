@@ -17,8 +17,12 @@
 
 #youtube-number-div {
 	//display:none;	
+visibility:hidden;
+position:absolute;
 }
 
 #youtube-select-div {
-	//display:none;	
+	//display:none;		
+visibility:hidden;
+position:absolute;
 }
