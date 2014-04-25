@@ -252,6 +252,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 	if($file['width']>$maxwidth)
 	  $i = $key;
       }
+
     $returnFiles = array($video['snippet']->thumbnails->default->url);
 
     return(array(

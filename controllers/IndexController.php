@@ -141,9 +141,10 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
     $options = array('0'=>'No Collection');
     foreach ($collections as $collection)
       {
-	if(isset($collection->getElementTexts('Dublin Core','Title')[0]))
+	$titles = $collection->getElementTexts('Dublin Core','Title');
+	if(isset($titles[0]))
 	  {
-	    $title = $collection->getElementTexts('Dublin Core','Title')[0];
+	    $title = $titles[0];
 	    $options[$collection->id]=$title;
 	  }
       }

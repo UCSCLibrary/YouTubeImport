@@ -11,13 +11,13 @@
 /**
  * YouTube Import plugin.
  */
-class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
+class YoutubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 {
     /**
      * @var array Hooks for the plugin.
      */
     //protected $_hooks = array('admin_head');
-  protected $_hooks = array('initialize','define_acl','admin_head');
+  protected $_hooks = array('initialize','define_acl','admin_head','install');
 
   /**
    * @var array Filters for the plugin.
@@ -67,7 +67,6 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
     $db = get_db();
     $table = $db->getTable('ItemType');
     $mpType = $table->findByName('Moving Image');
-    $mpType->addElements(array($playerElement));
     $mpType->addElements(array(
 			       array(
 				     'name'=>'Player',
