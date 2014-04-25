@@ -27,7 +27,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   /**
    * @var array Options and their default values.
    */
-  protected $_options = array();
+  protected $_options = array('');
 
   public function hookInitialize()
   {
@@ -40,7 +40,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
     queue_js_file('YoutubeImport');
     queue_css_file('YoutubeImport');
   }
-
+  /*
   private function _addItemType()
   {
     $newType = insert_item_type(
@@ -57,14 +57,17 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 		     );
     $newTypeId = $newType->id;
   }
+  */
 
   public function hookInstall(){
 
+    if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+      return;
+
     $db = get_db();
     $table = $db->getTable('ItemType');
-
-    //todo check if exists (both the moving image type and the player element)
     $mpType = $table->findByName('Moving Image');
+    $mpType->addElements(array($playerElement));
     $mpType->addElements(array(
 			       array(
 				     'name'=>'Player',
@@ -85,7 +88,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 
    
   /**
-   * Add the SedMeta link to the admin main navigation.
+   * Add the Youtube Import link to the admin main navigation.
    * 
    * @param array Navigation array.
    * @return array Filtered navigation array.

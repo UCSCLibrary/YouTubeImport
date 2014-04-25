@@ -64,19 +64,12 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
     else 
       $public = false;
 
-
-    if(isset($_REQUEST['youtube-userrole']))
-      $userRole = $_REQUEST['youtube-userrole'];
-    else
-      $userRole = 0;
-
     $options = array(
 		     'url'=>$url,
 		     'collection'=>$collection,
 		     'selecting'=>$selecting,
 		     'selected'=>$selected,
-		     'public'=>$public,
-		     'userRole'=>$userRole
+		     'public'=>$public
 		     );
 
     $dispacher = Zend_Registry::get('job_dispatcher');
@@ -90,30 +83,22 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
 
   private function _importSingle()
   {
+
     require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'import.php';
     require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Client.php';
-    require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Services' . DIRECTORY_SEPARATOR . 'YouTube.php';
+    require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Service' . DIRECTORY_SEPARATOR . 'YouTube.php';
 
     $client = new Google_Client();
-  	$client->setApplicationName("Omeka _Youtube_Import");
-  	$client->setDeveloperKey(YoutubeImport_ImportJob::$youtube_api_key);
+    $client->setApplicationName("Omeka _Youtube_Import");
+    $client->setDeveloperKey(YoutubeImport_ImportJob::$youtube_api_key);
   	
-  	$service = new Google_Service_YouTube($client);
+    $service = new Google_Service_YouTube($client);
 
     if(isset($_REQUEST['youtube-url']))
       $url = $_REQUEST['youtube-url'];
     else
-      die("ERROR WITH PHOTOSET ID POST VAR");
-/*
-    $expUrl = explode("/",$url);
+      die("ERROR WITH youtube ID POST VAR");
 
-    if(count($expUrl)>1)
-      $photoID = $expUrl[5];
-    else
-      $photoID = $url;
-*/
-
-$videoID = $url;
 
     if(isset($_REQUEST['youtube-collection']))
       $collection = $_REQUEST['youtube-collection'];
@@ -125,12 +110,10 @@ $videoID = $url;
     else 
       $public = false;
 
-    if(isset($_REQUEST['youtube-userrole']))
-      $userRole = $_REQUEST['youtube-userrole'];
-    else
-      $userRole = 0;
-
-    $post = YoutubeImport_ImportJob::GetVideoPost($videoID,$service,$collection,$userRole,$public);
+    $videoID = YoutubeImport_ImportJob::ParseURL($url);
+    $response =  YoutubeImport_ImportJob::GetVideo($videoID,$service,$collection,$public);
+    $post = $response['post'];
+    $files = $response['files'];
 
     $record = new Item();
 
@@ -141,6 +124,8 @@ $videoID = $url;
     } else {
       error_log($record->getErrors());
     }
+
+    insert_files_for_item($record,'Url',$files);
  
     $flashMessenger = $this->_helper->FlashMessenger;
     $flashMessenger->addMessage('Your youtube video was imported into Omeka successfully','success');

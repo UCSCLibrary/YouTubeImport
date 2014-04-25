@@ -14,7 +14,8 @@
 //class YoutubeImport_ImportJob
 class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 {
-  public static $youtube_api_key = '';
+  public static $youtube_api_key = 'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w';
+  public static $appName = "OmekaYouTubeImport";
   private $url;
   private $type;
   private $videoID;
@@ -34,13 +35,14 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Services' . DIRECTORY_SEPARATOR . 'YouTube.php';
 
     $client = new Google_Client();
-  	$client->setApplicationName("Omeka _Youtube_Import");
-  	$client->setDeveloperKey(self::$youtube_api_key);
+    $client->setApplicationName(self::$appName);
+    $client->setDeveloperKey(self::$youtube_api_key);
   	
-  	$this->service = new Google_Service_YouTube($client);
+    $this->service = new Google_Service_YouTube($client);
     
+    $this->videoID = self::$ParseURL($this->url);
+
 	/*
-    $this->videoID = $this->_parseURL();
 
     if($this->collection == 0)
       $this->collection = $this->_makeDuplicateCollection($this->type);
@@ -99,14 +101,18 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
   {
     $this->ownerRole = $role;
   }
-  /*
-  private function _parseURL()
+  
+  public static function ParseURL($url)
   {
-	$videoID="";
+    $strings = explode("/",$url);
+    $videoID = $strings[count($strings)-1];
+    $strings = explode("=",$url);
+    $videoID = $strings[count($strings)-1];
+
 	//TODO get youtube video ID from url
     return($videoID);
   }
-  */
+  
   private function _getVideoIDs($type='unknown')
   {
 	  /*
@@ -130,20 +136,23 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     */
   }
 
-  public static function GetVideoPost($itemID,$service,$collection=0,$public=0)
+  public static function GetVideo($itemID,$service,$collection=0,$public=0)
   {
 
-    $part = "id,snippet,contentDetails,fileDetails,liveStreamingDetails,player,processingDetails, recordingDetails,topicDetails";
-    $response = $service->videos->listVideos($part, array('id'=>$itemID));
-
+    $part = "id,snippet,contentDetails,player,status,recordingDetails";
+    //$part = "id,snippet,contentDetails,fileDetails,liveStreamingDetails,player,processingDetails,recordingDetails,topicDetails";
+    $response = $service->videos->listVideos($part, array('id'=>$itemID,'maxResults'=>1));
+    
     if (empty($response)) {
       die('twarrrr! no video found.');
     }
 
+    $items = $response->items;
+
+    $video = $items[0];
+
     //todo format date if necessary
     $date = $video['snippet']['publishedAt'];
-
-    $video = $response[0];
 
     if($video['contentDetails']['licensedContent'])
       $license = $video['status']['license'];
@@ -161,11 +170,17 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 		  41=>array($video['snippet']['description']), //description
 		  40=>array($date),  //date
 		  48=>array('http://YouTube.com'), //source
-		  47=>array($license),//rights
-		  42=>array("File type: ".$video['fileDetails']['fileType']."  Container: ".$video['fileDetails']['container']),  // format
+		  47=>array($license)  //rights
+		  //42=>array("File type: ".$video['fileDetails']['fileType']."  Container: ".$video['fileDetails']['container']),  // format
 		  );
 
-    $playerElement = get_element_by_name('Player');
+    if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+      die('ERRRORZ!');
+
+    $db = get_db();
+    $table = $db->getTable('Element');
+    $playerElement = $table->findByElementSetNameAndElementName(ElementSet::ITEM_TYPE_NAME,'Player');
+
     $maps[$playerElement->id]=array($video['player']['embedHtml']);
       
     $Elements = array();
@@ -192,7 +207,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
       }
 
     $tags = "";
-    foreach($video['tags'] as $tag)
+    foreach($video['snippet']->tags as $tag)
       {
 	$tags .= $tag;
 	$tags .=",";
@@ -200,7 +215,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 
     $tags = substr($tags,0,-2);
 
-    $returnArray = array(
+    $returnPost = array(
 			 'Elements'=>$Elements,
 			 'item_type_id'=>'3',      //a moving image
 			 'tags-to-add'=>$tags,
@@ -208,13 +223,26 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 			 'collection_id'=>$collection
 			 );
     if($public)
-      $returnArray['public']="1";
+      $returnPost['public']="1";
 
-    return($returnArray );
+
+    $i=0;
+    $maxwidth=0;
+    foreach($video['snippet']->thumbnails as $key => $file)
+      {
+	if($file['width']>$maxwidth)
+	  $i = $key;
+      }
+    $returnFiles = array($video['snippet']->thumbnails->standard->url);
+
+    return(array(
+		 'post' => $returnPost,
+		 'files' => $returnFiles
+		 ));
 
   }
 
-
+  /*
   private function _makeDuplicateCollection($type='unknown')
   {
     // die("setID: ".$this->setID."<br>");
@@ -279,7 +307,9 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     return($record->id);
 
   }
+  */
 
+  /*
   private function _addPhoto($itemID)
   {
     $post = self::GetPhotoPost($itemID,$this->f,$this->collection,$this->ownerRole,$this->public);
@@ -301,6 +331,8 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     //TODO: create derivative images
 
   }
+
+  */
 
 
 }

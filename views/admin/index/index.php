@@ -22,12 +22,12 @@ if(!isset($this->collection))
 
 <div class="field" id="youtube-number-div">
  <div id="youtube-number-label" class="two columns alpha">
-<label for="youtube-number"><?php echo __('Number of Photos'); ?></label>
+<label for="youtube-number"><?php echo __('Number of Videos'); ?></label>
 </div>
 <div class="inputs five columns omega">
   <label><input type="radio" name="youtube-number" value="single" id="youtube-single-radio" checked="checked">Single Video</label><br>
   <label><input type="radio" name="youtube-number" value="multiple" id="youtube-multiple-radio">Multiple Videos (channel or user)</label>
-<p class="explanation"><?php echo __( 'Are you importing a single video, or multiple videos from a channel or user?' ); ?></p>
+<p class="explanation"><?php echo __( 'Please indicate whether you importing a single video, or multiple videos from a channel or user.' ); ?></p>
    </div>
 </div>
 
