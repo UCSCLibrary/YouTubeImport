@@ -72,5 +72,5 @@ if(!isset($this->collection))
 
 
 </form>
-<?php echo foot(); ?>
+  <?php echo foot(); ?>
   

@@ -11,7 +11,6 @@
  *
  * @package YoutubeImport
  */
-//class YoutubeImport_ImportJob
 class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 {
   public static $youtube_api_key = 'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w';

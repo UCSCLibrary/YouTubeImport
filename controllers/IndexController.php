@@ -116,6 +116,8 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
     $record = new Item();
 
     $record->setPostData($post);
+    
+    ob_start();
 
     if ($record->save(false)) {
       // Succeed silently, since we're in the background	
@@ -123,8 +125,13 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
       error_log($record->getErrors());
     }
 
-    insert_files_for_item($record,'Url',$files);
- 
+    if(!empty($files)&&!empty($record))
+      {
+	insert_files_for_item($record,'Url',$files);
+      }
+   
+    ob_end_clean();
+    
     $flashMessenger = $this->_helper->FlashMessenger;
     $flashMessenger->addMessage('Your youtube video was imported into Omeka successfully','success');
 
