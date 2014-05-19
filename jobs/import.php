@@ -119,6 +119,10 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
       foreach($video['recordingDetails']['location'] as $label=>$number)
 	$spatialCoverage .= "$label = $number<br>";
 
+    $publisher = "";
+    if(!empty($video['snippet']['channelTitle']))
+       $publisher .= $video['snippet']['channelTitle']."<br>published via YouTube.com"; 
+    
 
     if(isset($video['status']['license']))
       {
@@ -165,6 +169,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 	$maps["Dublin Core"]["Date Submitted"]=array($datePublished);
 	$maps["Dublin Core"]["Date Created"]=array($dateRecorded);
 	$maps["Dublin Core"]["Spatial Coverage"]=array($spatialCoverage);
+	$maps["Dublin Core"]["Publisher"]=array($publisher);
       }
 
     if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
