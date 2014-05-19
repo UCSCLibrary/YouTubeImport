@@ -40,33 +40,7 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     
     $this->videoID = self::$ParseURL($this->url);
 
-	/*
 
-    if($this->collection == 0)
-      $this->collection = $this->_makeDuplicateCollection($this->type);
-
-    $photoIDs = $this->_getPhotoIDs();
-
-    $items = array();
-
-    echo("adding photos: <br>");
-    print_r($photoIDs);
-    echo("<br><br>");
-
-    echo("selected");
-    print_r($this->selected);
-    //die();
-
-    foreach ($photoIDs as $photoID)
-      {
-	if(!$this->selecting || isset($this->selected[$photoID]))
-	  $items[] = $this->_addPhoto($photoID);
-	echo("photo added:".$photoID);
-      }
-
-    //log the list of added items maybe? Or check whether we got them all?
-
-    */
   }
 
   
@@ -106,46 +80,14 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
       } elseif (isset($parsed['path'])) {
       $videoID = str_replace("/","",$parsed['path']);
       }
-    
-      /*
-    $strings = explode("/",$url);
-    $videoID = $strings[count($strings)-1];
-    $strings = explode("=",$url);
-    $videoID = $strings[count($strings)-1];
-      */
-
-	//TODO get youtube video ID from url
     return($videoID);
   }
   
-  private function _getVideoIDs($type='unknown')
-  {
-	  /*
-    $ids=array();
-
-    $list = $this->f->photosets_getPhotos($this->videoID);
-
-    if(empty($list) || ( $list['stat']=='fail' && $list['err']['code']==1 ) )
-      {
-	//photoset not found on flickr. Check if it's a gallery
-	$response = $this->f->galleries_getPhotos($this->videoID);
-	$list['photoset']=$response['photos'];
-      }
-
-    foreach($list['photoset']['photo'] as $photo)
-      {
-	$ids[]=$photo['id'];
-      }
-
-    return $ids;
-    */
-  }
-
   public static function GetVideo($itemID,$service,$collection=0,$public=0)
   {
 
     $part = "id,snippet,contentDetails,player,status,recordingDetails";
-    //$part = "id,snippet,contentDetails,fileDetails,liveStreamingDetails,player,processingDetails,recordingDetails,topicDetails";
+    
     $response = $service->videos->listVideos($part, array('id'=>$itemID,'maxResults'=>1));
     
     if (empty($response)) {
@@ -162,10 +104,21 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 
     //todo format date if necessary
     $datePublished = $video['snippet']['publishedAt'];
-    //$dateRecorded = $video['contentDetails']['RecordingDate'];
 
-    $geoLocations = array();
-    //TODO loop through geolocations and add them
+    $dateRecorded = "";
+    if(!empty($video['recordingDetails']['RecordingDate']))
+      $dateRecorded = $video['recordingDetails']['RecordingDate'];
+
+    $spatialCoverage = "";
+    if(!empty($video['recordingDetails']['locationDescription']))
+       $spatialCoverage .= $video['recordingDetails']['locationDescription']."<br>";
+    if(!empty($video['recordingDetails']['locationDescription']))
+       $spatialCoverage .= $video['recordingDetails']['locationDescription']."<br>";
+    
+    if(!empty($video['recordingDetails']['location']))
+      foreach($video['recordingDetails']['location'] as $label=>$number)
+	$spatialCoverage .= "$label = $number<br>";
+
 
     if(isset($video['status']['license']))
       {
@@ -195,12 +148,6 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 	$rightsHolder = "";
       }
 
-    //todo: get element ID of player element we added on install
-
-    //todo: pull any other relevant metadata from the video resource 
-    //https://developers.google.com/youtube/v3/docs/videos
-    //and map it to omeka elements
-
     $maps = array(
 		  "Dublin Core"=>array(
 				       "Title"=>array($video['snippet']['title']),
@@ -216,27 +163,14 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 	$maps["Dublin Core"]["License"]=array($license);
 	$maps["Dublin Core"]["Rights Holder"]=array($rightsHolder);
 	$maps["Dublin Core"]["Date Submitted"]=array($datePublished);
-	//$maps["Dublin Core"]["license"]=array($dateRecorded);
-	//$maps["Dublin Core"]["license"]=array($geoLocations);
+	$maps["Dublin Core"]["Date Created"]=array($dateRecorded);
+	$maps["Dublin Core"]["Spatial Coverage"]=array($spatialCoverage);
       }
-		  /*
-		  //extended dublin core
-		  74=>  //license
-		  101=>array($rightsHolder), //rights holder
-		  65=>array($datePublished),
-		  66=>array($dateRecorded),
-		  91=>$geoLocations
-		  */
-		  //42=>array("File type: ".$video['fileDetails']['fileType']."  Container: ".$video['fileDetails']['container']),  // format
 
     if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
       die('ERRRORZ!');
 
     $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
-
-    /*$playerElement = $table->findByElementSetNameAndElementName(ElementSet::ITEM_TYPE_NAME,'Player');
-    $maps[$playerElement->id]=array($playerHtml);
-    */
 
     $maps[ElementSet::ITEM_TYPE_NAME]["Player"]=array($playerHtml);
       
@@ -314,98 +248,6 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 		 ));
 
   }
-
-  /*
-  private function _makeDuplicateCollection($type='unknown')
-  {
-    // die("setID: ".$this->setID."<br>");
-
-    if($type=="photoset")
-      {
-	$setInfo = $this->f->photosets_getInfo($this->videoID);
-      }
-    else if ($type=="gallery")
-      {
-	$response = $this->f->galleries_getInfo($this->videoID);
-
-	if($response['stat']=="ok")
-	  $setInfo=$response['gallery'];
-	else
-	  die("Error retrieving gallery info");
-      }
-
-    $maps = array(
-		  50=>array($setInfo['title']),
-		  41=>array($setInfo['description'])
-		  );
-
-    if($this->ownerRole > 0)
-      $maps[$this->ownerRole] = array($photoInfo['username']);
-      
-    $Elements = array();
-    foreach ($maps as $elementID => $elementTexts)
-      {
-	foreach($elementTexts as $elementText)
-	  {
-	    if($elementText != strip_tags($elementText)) {
-	      //element text has html tags
-	      $text = "";
-	      $html = $elementText;
-	    }else {
-	      //plain text or other non-html object
-	      $html = "";
-	      $text = $elementText;
-	    }
-
-	    $Elements[$elementID] = array(array(
-						'text' => $text,
-						'html' => $html
-						));
-	  }
-      }
-
-    $postArray = array('Elements'=>$Elements) ;
-    if($this->public)
-      $postArray['public']="1";
-
-    $record = new Collection();
-
-    $record->setPostData($postArray);
-
-    if ($record->save(false)) {
-	// Succeed silently, since we're in the background
-    } else {
-      error_log($record->getErrors());
-    }
-    return($record->id);
-
-  }
-  */
-
-  /*
-  private function _addPhoto($itemID)
-  {
-    $post = self::GetPhotoPost($itemID,$this->f,$this->collection,$this->ownerRole,$this->public);
-      
-    $files = self::GetPhotoFiles($itemID);
-
-    $record = new Item();
-
-    $record->setPostData($post);
-
-    if ($record->save(false)) {
-	// Succeed silently, since we're in the background	
-    } else {
-      error_log($record->getErrors());
-    }
-    
-    insert_files_for_item($record,'Url',$files);
-
-    //TODO: create derivative images
-
-  }
-
-  */
 
 
 }
