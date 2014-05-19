@@ -11,7 +11,6 @@
  *
  * @package YoutubeImport
  */
-//class YoutubeImport_ImportJob
 class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 {
   public static $youtube_api_key = 'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w';
@@ -203,62 +202,83 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     //and map it to omeka elements
 
     $maps = array(
-		  50=>array($video['snippet']['title']), //title
-		  41=>array($video['snippet']['description']), //description
-		  40=>array($datePublished),  //date
-		  48=>array('http://YouTube.com'), //source
-		  47=>array($license),  //rights
+		  "Dublin Core"=>array(
+				       "Title"=>array($video['snippet']['title']),
+				       "Description"=>array($video['snippet']['description']),
+				       "Date"=>array($datePublished),
+				       "Source"=>array('http://YouTube.com'),
+				       "Rights"=>array($license)
+				       )
+		  );
+
+    if (plugin_is_active('DublinCoreExtended'))
+      {
+	$maps["Dublin Core"]["License"]=array($license);
+	$maps["Dublin Core"]["Rights Holder"]=array($rightsHolder);
+	$maps["Dublin Core"]["Date Submitted"]=array($datePublished);
+	//$maps["Dublin Core"]["license"]=array($dateRecorded);
+	//$maps["Dublin Core"]["license"]=array($geoLocations);
+      }
 		  /*
 		  //extended dublin core
-		  74=>array($license),  //license
+		  74=>  //license
 		  101=>array($rightsHolder), //rights holder
 		  65=>array($datePublished),
 		  66=>array($dateRecorded),
 		  91=>$geoLocations
 		  */
 		  //42=>array("File type: ".$video['fileDetails']['fileType']."  Container: ".$video['fileDetails']['container']),  // format
-		  );
 
     if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
       die('ERRRORZ!');
 
-    $db = get_db();
-    $table = $db->getTable('Element');
-    $playerElement = $table->findByElementSetNameAndElementName(ElementSet::ITEM_TYPE_NAME,'Player');
-
     $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
 
+    /*$playerElement = $table->findByElementSetNameAndElementName(ElementSet::ITEM_TYPE_NAME,'Player');
     $maps[$playerElement->id]=array($playerHtml);
+    */
+
+    $maps[ElementSet::ITEM_TYPE_NAME]["Player"]=array($playerHtml);
       
     $Elements = array();
-    foreach ($maps as $elementID => $elementTexts)
+
+    $db = get_db();
+    $elementTable = $db->getTable('Element');
+    
+    foreach ($maps as $elementSet=>$elements)
       {
-	foreach($elementTexts as $elementText)
+	foreach($elements as $elementName => $elementTexts)
 	  {
-	    $text = $elementText;
+	    $element = $elementTable->findByElementSetNameAndElementName($elementSet,$elementName);
+	    $elementID = $element->id;
 
-	    //check for html tags
-	    if($elementText != strip_tags($elementText)) {
-	      //element text has html tags
-	      $html = "1";
-	    }else {
-	      //plain text or other non-html object
-	      $html = "0";
-	    }
+	    $Elements[$elementID] = array();
+	    if(is_array($elementTexts))
+	      {
+		foreach($elementTexts as $elementText)
+		  {
 
-	    $Elements[$elementID] = array(array(
-						'text' => $text,
-						'html' => $html
-						));
+		    //check for html tags
+		    if($elementText != strip_tags($elementText)) {
+		      //element text has html tags
+		      $html = "1";
+		    }else {
+		      //plain text or other non-html object
+		      $html = "0";
+		    }
+
+		    $Elements[$elementID][] = array(
+						    'text' => $elementText,
+						    'html' => $html
+						    );
+		  }
+	      }
 	  }
       }
 
     $tags = "";
-    if(isset($video['snippet']['tags']))
-      die('well fuck');
     if(isset($video['snippet']->tags))
       {
-    
 	foreach($video['snippet']->tags as $tag)
 	  {
 	    $tags .= $tag;

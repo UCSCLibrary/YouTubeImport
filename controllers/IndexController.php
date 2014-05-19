@@ -30,6 +30,12 @@ class YoutubeImport_IndexController extends Omeka_Controller_AbstractActionContr
       
   }
 
+  public function testAction()
+  {
+    include_once(dirname(dirname(__FILE__))."/forms/Config.php");
+    $this->view->form = new Youtube_Form_Import();
+  }
+
   
   private function _importMultiple()
   {
