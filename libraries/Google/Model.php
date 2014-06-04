@@ -53,6 +53,7 @@ class Google_Model implements ArrayAccess
         $val = array();
       } else {
         $val = null;
+	return null;
       }
 
       if ($this->isAssociativeArray($val)) {

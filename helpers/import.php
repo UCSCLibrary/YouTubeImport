@@ -7,68 +7,28 @@
  */
 
 /**
- * The YoutubeImport import job class.
+ * The YoutubeImport import helper class.
  *
  * @package YoutubeImport
  */
-class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
+class YoutubeImport_ImportHelper
 {
+  
+  /**
+   * @var string Youtube API key for this plugin
+   */
   public static $youtube_api_key = 'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w';
+  
+  /**
+   * @var string Google app name associated with this plugin
+   */
   public static $appName = "OmekaYouTubeImport";
-  private $url;
-  private $type;
-  private $videoID;
-  private $collection=0;    //create new colllection by default
-  private $selecting=false;  //import all images in set by default
-  private $selected=array();
-  private $public = false;  //create private omeka items by default
-  private $service;
-  
 
-  public function perform()
-  {
-    Zend_Registry::get('bootstrap')->bootstrap('Acl');
-    
-  	require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Client.php';
-    require_once dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . 'Google' . DIRECTORY_SEPARATOR . 'Services' . DIRECTORY_SEPARATOR . 'YouTube.php';
-
-    $client = new Google_Client();
-    $client->setApplicationName(self::$appName);
-    $client->setDeveloperKey(self::$youtube_api_key);
-  	
-    $this->service = new Google_Service_YouTube($client);
-    
-    $this->videoID = self::$ParseURL($this->url);
-
-
-  }
-
-  
-  public function setUrl($url)
-  {
-    $this->url = $url;
-  }
-
-  public function setCollection($collection)
-  {
-    $this->collection = $collection;
-  }
-
-  public function setSelected($selected)
-  {
-    $this->selected = $selected;
-  }
-
-  public function setSelecting($selecting)
-  {
-    $this->selecting = $selecting;
-  }
-
-  public function setPublic($public)
-  {
-    $this->public = $public;
-  }
-
+  /*
+   *Parse the Youtube url parameter 
+   *
+   *@return $string $setID A unique identifier for the Youtube collection
+   */
   public static function ParseURL($url)
   {
     $parsed = parse_url($url);
@@ -83,40 +43,64 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
     return($videoID);
   }
   
-  public static function GetVideo($itemID,$service,$collection=0,$public=0)
+  /*
+   *Fetch metadata from a Youtube video and prepare it
+   *
+   *@param string $itemID The Youtube video ID from which to extract metadata
+   *@param object $service The youtube API php interface instance
+   *@param int $collection The ID of the collection to which to add the new item
+   *@param string $ownerRole The name of the dublin core field to which to 
+   *add the Youtube user info
+   *@param boolean public Indicates whether the new omeka item should be public
+   *@return array An array containing metadata associated with the 
+   *given youtube video in the correct format to save as an omeka item,
+   *and urls of files associated
+   */
+  public static function GetVideo($itemID,$service,$collection=0,$ownerRole='Publisher',$public=0)
   {
 
     $part = "id,snippet,contentDetails,player,status,recordingDetails";
     
-    $response = $service->videos->listVideos($part, array('id'=>$itemID,'maxResults'=>1));
+    $response = $service->videos->listVideos($part, array(
+							  'id'=>$itemID,
+							  'maxResults'=>1
+							  ));
     
-    if (empty($response)) {
-      die('twarrrr! no video found.');
-    }
+    if (empty($response)) 
+      throw new Exception("No video found."); 
 
     $items = $response->items;
 
-   if (empty($items)) {
-      die('twarrrr! no video found for itemID '.$itemID);
-    }
+    if (empty($items)) 
+     throw new Exception('No video found for itemID '.$itemID);
 
     $video = $items[0];
 
     //todo format date if necessary
     $datePublished = $video['snippet']['publishedAt'];
 
+    try{
+      $recordingDetails = $video['recordingDetails'];
+    } catch (Exception $e) {
+      die('exception');
+      $recordingDetails = array();
+    }
+
+    //recordingDetails are only returned for authenticated requests, apparently!
+    //or maybe users can hide them from the public.
+
     $dateRecorded = "";
-    if(!empty($video['recordingDetails']['RecordingDate']))
-      $dateRecorded = $video['recordingDetails']['RecordingDate'];
+    if(!empty($recordingDetails['RecordingDate']))
+      $dateRecorded = $recordingDetails['RecordingDate'];
 
     $spatialCoverage = "";
-    if(!empty($video['recordingDetails']['locationDescription']))
-       $spatialCoverage .= $video['recordingDetails']['locationDescription']."<br>";
-    if(!empty($video['recordingDetails']['locationDescription']))
-       $spatialCoverage .= $video['recordingDetails']['locationDescription']."<br>";
+    if(!empty($recordingDetails['locationDescription']))
+       $spatialCoverage .= $recordingDetails['locationDescription']."<br>";
+    if(!empty($recordingDetails['locationDescription']))
+       $spatialCoverage .= $recordingDetails['locationDescription']."<br>";
     
-    if(!empty($video['recordingDetails']['location']))
-      foreach($video['recordingDetails']['location'] as $label=>$number)
+    if(!empty($recordingDetails['location']))
+      foreach($recordingDetails['location'] as $label=>$number)
 	$spatialCoverage .= "$label = $number<br>";
 
     $publisher = "";
@@ -162,18 +146,20 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 				       )
 		  );
 
+    if(!empty($ownerRole))
+      $maps['Dublin Core'][$ownerRole]=array($publisher);
+
     if (plugin_is_active('DublinCoreExtended'))
       {
 	$maps["Dublin Core"]["License"]=array($license);
 	$maps["Dublin Core"]["Rights Holder"]=array($rightsHolder);
 	$maps["Dublin Core"]["Date Submitted"]=array($datePublished);
-	$maps["Dublin Core"]["Date Created"]=array($dateRecorded);
-	$maps["Dublin Core"]["Spatial Coverage"]=array($spatialCoverage);
-	$maps["Dublin Core"]["Publisher"]=array($publisher);
+	//$maps["Dublin Core"]["Date Created"]=array($dateRecorded);
+	//$maps["Dublin Core"]["Spatial Coverage"]=array($spatialCoverage);
       }
 
     if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-      die('ERRRORZ!');
+      throw new Exception('Metadata element missing for embedded video html');
 
     $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
 
@@ -235,7 +221,6 @@ class YoutubeImport_ImportJob extends Omeka_Job_AbstractJob
 			 );
     if($public)
       $returnPost['public']="1";
-
 
     $i=0;
     $maxwidth=0;

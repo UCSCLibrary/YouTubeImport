@@ -1,28 +1,4 @@
-.previewPic {
-    margin-left: 15px;
-}
-.previewCheck {
-    position: relative;
-    top: -25%;
-}
-.previewPicDiv {
-    float: left;
-    width: 180px;
-    height: 135px;
-}
-
-#previewThumbs {
-    border: 1pm solid black;
-}
-
-#youtube-number-div {
-	//display:none;	
-visibility:hidden;
-position:absolute;
-}
-
-#youtube-select-div {
-	//display:none;		
-visibility:hidden;
-position:absolute;
+iframe {
+    max-height: 275px;
+    max-width: 400px;
 }
