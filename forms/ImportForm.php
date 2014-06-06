@@ -1,6 +1,7 @@
 <?php
-
 /**
+ * YoutubeImport Form for defining import parameters
+ *
  * @package     YouTubeImport
  * @copyright   2014 UCSC Library Digital Initiatives
  * @license     

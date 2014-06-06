@@ -12,10 +12,9 @@
  */
 class YoutubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 {
-    /**
-     * @var array Hooks for the plugin.
-     */
-    //protected $_hooks = array('admin_head');
+  /**
+   * @var array Hooks for the plugin.
+   */
   protected $_hooks = array('define_acl','install','admin_head');
 
   /**

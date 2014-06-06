@@ -16,7 +16,7 @@ class YoutubeImportPlugin extends Omeka_Plugin_AbstractPlugin
      * @var array Hooks for the plugin.
      */
     //protected $_hooks = array('admin_head');
-  protected $_hooks = array('define_acl','install');
+  protected $_hooks = array('define_acl','install','admin_head');
 
   /**
    * @var array Filters for the plugin.
@@ -45,6 +45,16 @@ class YoutubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 			       ));
     $mpType->save();
   
+  }
+
+  /**
+   *When the plugin loads on the admin side, 
+   *queue the css file
+   *
+   *@return void
+   */
+  public function hookAdminHead(){
+    queue_css_file('YoutubeImport');
   }
 
   /**

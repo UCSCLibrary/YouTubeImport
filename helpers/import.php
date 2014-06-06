@@ -24,7 +24,7 @@ class YoutubeImport_ImportHelper
    */
   public static $appName = "OmekaYouTubeImport";
 
-  /*
+  /**
    *Parse the Youtube url parameter 
    *
    *@return $string $setID A unique identifier for the Youtube collection
@@ -43,7 +43,7 @@ class YoutubeImport_ImportHelper
     return($videoID);
   }
   
-  /*
+  /**
    *Fetch metadata from a Youtube video and prepare it
    *
    *@param string $itemID The Youtube video ID from which to extract metadata
