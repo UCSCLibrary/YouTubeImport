@@ -10,7 +10,7 @@
 /**
  * YouTube Import plugin class
  */
-class YoutubeImportPlugin extends Omeka_Plugin_AbstractPlugin
+class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 {
   /**
    * @var array Hooks for the plugin.
@@ -78,7 +78,7 @@ class YoutubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   {
     $nav[] = array(
 		   'label' => __('YouTube Import'),
-		   'uri' => url('youtube-import'),
+		   'uri' => url('you-tube-import'),
 		   'resource' => 'YoutubeImport_Index',
 		   'privilege' => 'index'
 		   );
