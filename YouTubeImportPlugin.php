@@ -15,12 +15,26 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   /**
    * @var array Hooks for the plugin.
    */
-  protected $_hooks = array('define_acl','install','admin_head');
+    protected $_hooks = array('define_acl','install','admin_head','after_save_item');
 
   /**
    * @var array Filters for the plugin.
    */
   protected $_filters = array('admin_navigation_main');
+
+  public function hookAfterSaveItem($args){
+
+      $item = $args['record'];                                          
+      $element = $this->_db->getTable("Element")->findByElementSetNameAndElementName('Item Type Metadata',"Player");
+      if($players = $this->_db->getTable("ElementText")->findBy(array('record_id'=>$item->id,'element_id'=>$element->id))) {
+          if(!is_array($players))
+              $players = array($players);
+          foreach ($players as $player) {
+              $player->html = 1;
+              $player->save();
+          }
+      }
+  }
 
   /**
    *When the plugin installs, create a new metadata element
