@@ -53,7 +53,11 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
    *@return void
    */
   public function hookAdminHead(){
-    queue_css_file('YoutubeImport');
+      if(  $playerElement = $this->_db->getTable("Element")->findByElementSetNameAndElementName("Item Type Metadata","Player")) {
+          queue_js_string("var playerElementId = ".$playerElement->id.';');
+          queue_js_file('YoutubeImport');
+      }
+      queue_css_file('YoutubeImport');
   }
 
   /**

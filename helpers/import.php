@@ -182,9 +182,8 @@ class YoutubeImport_ImportHelper
 	      {
 		foreach($elementTexts as $elementText)
 		  {
-
 		    //check for html tags
-		    if($elementText != strip_tags($elementText)) {
+                      if($elementText != strip_tags($elementText)) {
 		      //element text has html tags
 		      $html = "1";
 		    }else {
