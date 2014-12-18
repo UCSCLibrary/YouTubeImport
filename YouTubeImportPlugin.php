@@ -15,12 +15,33 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   /**
    * @var array Hooks for the plugin.
    */
-    protected $_hooks = array('define_acl','install','admin_head','after_save_item');
+    protected $_hooks = array(
+        'define_acl',
+        'install',
+        'admin_head',
+        'after_save_item',
+        'config',
+        'config_form'
+    );
 
+    public function filterElement($text,$args) {
+        if(strpos($text,'iframe') > 0) {
+            $wpo = strpos($text,'width=')+7;
+            $text = substr_replace($text,get_option('youtube_width'),$wpo,3);
+            $hpo = strpos($text,'height=')+8;
+            $text = substr_replace($text,get_option('youtube_height'),$hpo,3);
+        }
+        return $text;
+    }
   /**
    * @var array Filters for the plugin.
    */
-  protected $_filters = array('admin_navigation_main');
+    protected $_filters = array('admin_navigation_main','filterElement'=>array('Display','Item',"Item Type Metadata","Player"));
+
+  /**
+   * @var array Options for the plugin.
+   */
+        protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
 
   public function hookAfterSaveItem($args){
 
@@ -73,6 +94,18 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
       }
       queue_css_file('YoutubeImport');
   }
+
+    public function hookConfig() {
+        if(isset($_REQUEST['youtube_width']))
+            set_option('youtube_width',$_REQUEST['youtube_width']);
+        if(isset($_REQUEST['youtube_height']))
+            set_option('youtube_height',$_REQUEST['youtube_height']);
+    }
+
+    public function hookConfigForm(){
+        include_once(dirname(__FILE__).'/forms/config_form.php');
+    }
+
 
   /**
    * Define the plugin's access control list.
