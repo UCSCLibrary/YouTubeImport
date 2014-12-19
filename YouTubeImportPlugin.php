@@ -24,15 +24,6 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
         'config_form'
     );
 
-    public function filterElement($text,$args) {
-        if(strpos($text,'iframe') > 0) {
-            $wpo = strpos($text,'width=')+7;
-            $text = substr_replace($text,get_option('youtube_width'),$wpo,3);
-            $hpo = strpos($text,'height=')+8;
-            $text = substr_replace($text,get_option('youtube_height'),$hpo,3);
-        }
-        return $text;
-    }
   /**
    * @var array Filters for the plugin.
    */
@@ -64,21 +55,24 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
    *@return void
    */
   public function hookInstall(){
+      if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+          return;
 
-    if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-      return;
-
-    $db = get_db();
-    $table = $db->getTable('ItemType');
-    $mpType = $table->findByName('Moving Image');
-    $mpType->addElements(array(
-			       array(
-				     'name'=>'Player',
-				     'description'=>'html for embedded player to stream video content'
-				     )
-			       ));
-    $mpType->save();
-  
+      $db = get_db();
+      $table = $db->getTable('ItemType');
+      $mpType = $table->findByName('Moving Image');
+      if(!$is_object($mpType)) {
+          $mpType = new ItemType();
+          $mpType->name = "Moving Image";
+          $mpType->description = "A series of visual representations imparting an impression of motion when shown in succession. Examples include animations, movies, television programs, videos, zoetropes, or visual output from a simulation.";
+      }
+      $mpType->addElements(array(
+          array(
+              'name'=>'Player',
+              'description'=>'html for embedded player to stream video content'
+          )
+      ));
+      $mpType->save();
   }
 
   /**
@@ -134,6 +128,16 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 		   'privilege' => 'index'
 		   );
     return $nav;
+  }
+
+  public function filterElement($text,$args) {
+      if(strpos($text,'iframe') > 0) {
+          $wpo = strpos($text,'width=')+7;
+          $text = substr_replace($text,get_option('youtube_width'),$wpo,3);
+          $hpo = strpos($text,'height=')+8;
+          $text = substr_replace($text,get_option('youtube_height'),$hpo,3);
+      }
+      return $text;
   }
     
 }
