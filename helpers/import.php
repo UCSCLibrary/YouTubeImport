@@ -54,6 +54,7 @@ class YoutubeImport_ImportHelper
           $mpType = new ItemType();
           $mpType->name = "Moving Image";
           $mpType->description = "A series of visual representations imparting an impression of motion when shown in succession. Examples include animations, movies, television programs, videos, zoetropes, or visual output from a simulation.";
+          $mpType->save();
       }
       $mpType->addElements(array(
           array(
