@@ -110,6 +110,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   public function hookDefineAcl($args)
   {
     $args['acl']->addResource('YoutubeImport_Index');
+    $args['acl']->allow(null,'YoutubeImport_Index');
   }
 
    
