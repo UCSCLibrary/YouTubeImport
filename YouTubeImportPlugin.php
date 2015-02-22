@@ -61,7 +61,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
       $db = get_db();
       $table = $db->getTable('ItemType');
       $mpType = $table->findByName('Moving Image');
-      if(!$is_object($mpType)) {
+      if(!is_object($mpType)) {
           $mpType = new ItemType();
           $mpType->name = "Moving Image";
           $mpType->description = "A series of visual representations imparting an impression of motion when shown in succession. Examples include animations, movies, television programs, videos, zoetropes, or visual output from a simulation.";
