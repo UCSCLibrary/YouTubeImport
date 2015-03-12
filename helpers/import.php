@@ -43,14 +43,14 @@ class YoutubeImport_ImportHelper
     return($videoID);
   }
 
-  private function _addPlayerElement() {
+  private static function _addPlayerElement() {
       if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
           return;
 
       $db = get_db();
       $table = $db->getTable('ItemType');
       $mpType = $table->findByName('Moving Image');
-      if(!$is_object($mpType)) {
+      if(!is_object($mpType)) {
           $mpType = new ItemType();
           $mpType->name = "Moving Image";
           $mpType->description = "A series of visual representations imparting an impression of motion when shown in succession. Examples include animations, movies, television programs, videos, zoetropes, or visual output from a simulation.";
@@ -181,7 +181,7 @@ class YoutubeImport_ImportHelper
       }
 
     if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-        $this->_addPlayerElement();
+        static::_addPlayerElement();
 //      throw new Exception('Metadata element missing for embedded video html');
 
     $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
