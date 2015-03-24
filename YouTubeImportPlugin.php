@@ -35,15 +35,16 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
         protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
 
   public function hookAfterSaveItem($args){
-
-      $item = $args['record'];                                          
-      $element = $this->_db->getTable("Element")->findByElementSetNameAndElementName('Item Type Metadata',"Player");
-      if($players = $this->_db->getTable("ElementText")->findBy(array('record_id'=>$item->id,'element_id'=>$element->id))) {
-          if(!is_array($players))
-              $players = array($players);
-          foreach ($players as $player) {
-              $player->html = 1;
-              $player->save();
+      if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')) {          
+          $item = $args['record'];                                
+          $element = $this->_db->getTable("Element")->findByElementSetNameAndElementName('Item Type Metadata',"Player");
+          if($players = $this->_db->getTable("ElementText")->findBy(array('record_id'=>$item->id,'element_id'=>$element->id))) {
+              if(!is_array($players))
+                  $players = array($players);
+              foreach ($players as $player) {
+                  $player->html = 1;
+                  $player->save();
+              }
           }
       }
   }
@@ -82,13 +83,14 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
    *@return void
    */
   public function hookAdminHead(){
-      if(  $playerElement = $this->_db->getTable("Element")->findByElementSetNameAndElementName("Item Type Metadata","Player")) {
+      if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')){
+          $playerElement = $this->_db->getTable("Element")->findByElementSetNameAndElementName("Item Type Metadata","Player");
           queue_js_string("var playerElementId = ".$playerElement->id.';');
           queue_js_file('YoutubeImport');
       }
       queue_css_file('YoutubeImport');
   }
-
+  
     public function hookConfig() {
         if(isset($_REQUEST['youtube_width']))
             set_option('youtube_width',$_REQUEST['youtube_width']);
