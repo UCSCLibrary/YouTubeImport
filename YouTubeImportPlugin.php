@@ -6,7 +6,6 @@
  * @license http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-
 /**
  * YouTube Import plugin class
  */
@@ -27,15 +26,15 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   /**
    * @var array Filters for the plugin.
    */
-    protected $_filters = array('admin_navigation_main','filterElement'=>array('Display','Item',"Item Type Metadata","Player"));
+    protected $_filters = array('admin_navigation_main','filterElement'=>array('Display','Item',"Item Type Metadata","Player"),'display_elements');
 
   /**
    * @var array Options for the plugin.
    */
-        protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
+    protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
 
-  public function hookAfterSaveItem($args){
-      if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')) {          
+    public function hookAfterSaveItem($args){
+        if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')) {          
           $item = $args['record'];                                
           $element = $this->_db->getTable("Element")->findByElementSetNameAndElementName('Item Type Metadata',"Player");
           if($players = $this->_db->getTable("ElementText")->findBy(array('record_id'=>$item->id,'element_id'=>$element->id))) {
@@ -48,6 +47,31 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
           }
       }
   }
+
+    public function filterDisplayElements($elementSets){
+
+        if(!metadata('item',array('Item Type Metadata','Player')))
+            return $elementSets;
+
+        $newElementSets = array();
+        foreach ($elementSets as $set => $elements) {
+            $newElements = $elements;
+            if($set==="Moving Image Item Type Metadata") {
+                $newElements = array();
+                foreach ($elements as $key => $element) {
+                    if($key==="Player")
+                        $playerElement = $element;
+                    else
+                        $newElements[$key] = $element;
+                }
+            }           
+            $newElementSets[$set] = $newElements;
+        }
+        $newElementSets = array_merge(array('Player'=>array('Player'=>$playerElement)),$newElementSets);
+        return $newElementSets;
+
+//        return array_merge(array("Player"=>$playerElement),$newElementSets);
+    }
 
   /**
    *When the plugin installs, create a new metadata element
