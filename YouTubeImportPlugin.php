@@ -50,7 +50,10 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function filterDisplayElements($elementSets){
 
-        if(!metadata('item',array('Item Type Metadata','Player')))
+        if(! $item = get_current_record('item', false))
+            return $elementSets;
+
+        if(!metadata($item,array('Item Type Metadata','Player')))
             return $elementSets;
 
         $newElementSets = array();
