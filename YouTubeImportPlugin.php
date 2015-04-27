@@ -55,25 +55,25 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 
         if(!metadata($item,array('Item Type Metadata','Player')))
             return $elementSets;
-
+        
         $newElementSets = array();
         foreach ($elementSets as $set => $elements) {
             $newElements = $elements;
             if($set==="Moving Image Item Type Metadata") {
                 $newElements = array();
                 foreach ($elements as $key => $element) {
-                    if($key==="Player")
+                    if($key==="Player") 
                         $playerElement = $element;
-                    else
+                     else 
                         $newElements[$key] = $element;
                 }
             }           
             $newElementSets[$set] = $newElements;
         }
-        $newElementSets = array_merge(array('Player'=>array(''=>$playerElement)),$newElementSets);
-        return $newElementSets;
 
-//        return array_merge(array("Player"=>$playerElement),$newElementSets);
+        $newElementSets = array_merge(array('Player'=>array(''=>$playerElement)),$newElementSets);
+        
+        return isset($playerElement) ? $newElementSets : $elementSets;
     }
 
   /**

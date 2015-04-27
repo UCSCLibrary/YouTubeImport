@@ -1,6 +1,6 @@
 <?php
 
-$head = array('bodyclass' => 'history-log primary', 
+$head = array('bodyclass' => 'you-tube-import primary', 
               'title' => html_escape(__('YouTube Import | Import Video')));
 echo head($head);
 ?>
