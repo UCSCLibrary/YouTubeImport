@@ -71,9 +71,10 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
             $newElementSets[$set] = $newElements;
         }
 
-        $newElementSets = array_merge(array('Player'=>array(''=>$playerElement)),$newElementSets);
-        
-        return isset($playerElement) ? $newElementSets : $elementSets;
+        if(isset($playerElement))
+            return array_merge(array('Player'=>array(''=>$playerElement)),$newElementSets);
+        else
+            return $elementSets;
     }
 
   /**
