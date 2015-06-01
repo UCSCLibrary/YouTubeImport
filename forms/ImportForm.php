@@ -78,6 +78,8 @@ class Youtube_Form_Import extends Omeka_Form
 							   )
 			  );
 
+	$this->addElement('hash','youtube_token');
+
         // Submit:
         $this->addElement('submit', 'youtube-import-submit', array(
             'label' => __('Import Video')
