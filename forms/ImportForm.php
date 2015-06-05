@@ -31,9 +31,6 @@ class Youtube_Form_Import extends Omeka_Form
      */
     private function _registerElements()
     {
-      //hashed anti-csrf nonce:
-      //$this->addElement('hash', 'youtubeNonce', array('salt'=>'oilyravinecakes'));
-
       //URL:
       $this->addElement('text', 'youtubeurl', array(
 						    'label'         => __('Youtube URL'),
@@ -78,7 +75,8 @@ class Youtube_Form_Import extends Omeka_Form
 							   )
 			  );
 
-	$this->addElement('hash','youtube_token');
+        if(version_compare(OMEKA_VERSION,'2.2.1') >= 0)
+            $this->addElement('hash','youtube_token');
 
         // Submit:
         $this->addElement('submit', 'youtube-import-submit', array(
