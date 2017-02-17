@@ -9,6 +9,9 @@ jQuery(window).load(function() {
     dialogClass: "youtube-success-dialog"
   });
 
+  //reset the url input (not sure why the form reset function isn't working)
+  jQuery('body.you-tube-import div#content form input#youtubeurl').val("");
+
   textareaId = 'Elements-'+playerElementId+'-0-text';
   jQuery('#Elements-'+playerElementId+'-0-text_parent').hide();
   jQuery('#Elements-'+playerElementId+'-0-text').show();
