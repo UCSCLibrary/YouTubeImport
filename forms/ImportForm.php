@@ -34,7 +34,7 @@ class Youtube_Form_Import extends Omeka_Form
       //URL:
       $this->addElement('text', 'youtubeurl', array(
 						    'label'         => __('YouTube URL'),
-						    'description'   => __('Paste the full url of the Youtube video you would like to import'),
+						    'description'   => __('Paste the full URL of the YouTube video you would like to import'),
 						    'validators'    =>array(
 									    array('callback',false,array('callback'=>array($this,'validateYoutubeUrl'),'options'=>array()))
 									    ),
@@ -56,7 +56,7 @@ class Youtube_Form_Import extends Omeka_Form
 	// User Role:
         $this->addElement('select', 'youtubeuserrole', array(
 								'label'         => __('User Role'),
-								'description'   => __('Which role does the Youtube user/channel play in the creation of the new Omeka item?'),
+								'description'   => __('Which role does the YouTube user/channel play in the creation of the new Omeka item?'),
 								'value'         => 'Publisher',
 								'order'         => 3,
 								
@@ -151,7 +151,7 @@ class Youtube_Form_Import extends Omeka_Form
       if(isset($_REQUEST['youtubeurl']))
 	$url = $_REQUEST['youtubeurl'];
       else
-      throw new UnexpectedValueException('URL of Youtube video was not set');
+      throw new UnexpectedValueException('URL of YouTube video was not set');
 
 
       if(isset($_REQUEST['youtubecollection']))
