@@ -33,7 +33,7 @@ class Youtube_Form_Import extends Omeka_Form
     {
       //URL:
       $this->addElement('text', 'youtubeurl', array(
-						    'label'         => __('Youtube URL'),
+						    'label'         => __('YouTube URL'),
 						    'description'   => __('Paste the full url of the Youtube video you would like to import'),
 						    'validators'    =>array(
 									    array('callback',false,array('callback'=>array($this,'validateYoutubeUrl'),'options'=>array()))
@@ -114,7 +114,6 @@ class Youtube_Form_Import extends Omeka_Form
       $_REQUEST['youtubeurl'] = self::_resolveShortUrl($_REQUEST['youtubeurl']);
       
       try {
-
 	if(self::_importSingle())
 	  return('Go to Items or Collections to view imported videos.');
 
