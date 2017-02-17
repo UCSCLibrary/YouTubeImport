@@ -13,253 +13,253 @@
  */
 class YoutubeImport_ImportHelper
 {
-  
-  /**
-   * @var string Youtube API key for this plugin
-   */
-  public static $youtube_api_key = 'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w';
-  
-  /**
-   * @var string Google app name associated with this plugin
-   */
-  public static $appName = "OmekaYouTubeImport";
-
-  /**
-   *Parse the Youtube url parameter 
-   *
-   *@return $string $setID A unique identifier for the Youtube collection
-   */
-  public static function ParseURL($url)
-  {
-    $parsed = parse_url($url);
     
-    if(!empty($parsed['query']))
-      {
-	parse_str($parsed['query'],$parsed);
-	$videoID = $parsed['v'];
-      } elseif (isset($parsed['path'])) {
-      $videoID = str_replace("/","",$parsed['path']);
-      }
-    return($videoID);
-  }
-
-  private static function _addPlayerElement() {
-      if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-          return;
-
-      $db = get_db();
-      $table = $db->getTable('ItemType');
-      $mpType = $table->findByName('Moving Image');
-      if(!is_object($mpType)) {
-          $mpType = new ItemType();
-          $mpType->name = "Moving Image";
-          $mpType->description = "A series of visual representations imparting an impression of motion when shown in succession. Examples include animations, movies, television programs, videos, zoetropes, or visual output from a simulation.";
-          $mpType->save();
-      }
-      $mpType->addElements(array(
-          array(
-              'name'=>'Player',
-              'description'=>'html for embedded player to stream video content'
-          )
-      ));
-      $mpType->save();
-  }
-  
-  /**
-   *Fetch metadata from a Youtube video and prepare it
-   *
-   *@param string $itemID The Youtube video ID from which to extract metadata
-   *@param object $service The youtube API php interface instance
-   *@param int $collection The ID of the collection to which to add the new item
-   *@param string $ownerRole The name of the dublin core field to which to 
-   *add the Youtube user info
-   *@param boolean public Indicates whether the new omeka item should be public
-   *@return array An array containing metadata associated with the 
-   *given youtube video in the correct format to save as an omeka item,
-   *and urls of files associated
-   */
-  public static function GetVideo($itemID,$service,$collection=0,$ownerRole='Publisher',$public=0)
-  {
-
-    $part = "id,snippet,contentDetails,player,status,recordingDetails";
+    /**
+     * @var string Youtube API key for this plugin
+     */
+    public static $youtube_api_key = 'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w';
     
-    $response = $service->videos->listVideos($part, array(
-							  'id'=>$itemID,
-							  'maxResults'=>1
-							  ));
-    
-    if (empty($response)) 
-      throw new Exception("No video found."); 
+    /**
+     * @var string Google app name associated with this plugin
+     */
+    public static $appName = "OmekaYouTubeImport";
 
-    $items = $response->items;
-
-    if (empty($items)) 
-     throw new Exception('No video found for itemID '.$itemID);
-
-    $video = $items[0];
-
-    //todo format date if necessary
-    $datePublished = $video['snippet']['publishedAt'];
-
-    try{
-      $recordingDetails = $video['recordingDetails'];
-    } catch (Exception $e) {
-      die('exception');
-      $recordingDetails = array();
+    /**
+     *Parse the Youtube url parameter 
+     *
+     *@return $string $setID A unique identifier for the Youtube collection
+     */
+    public static function ParseURL($url)
+    {
+        $parsed = parse_url($url);
+        
+        if(!empty($parsed['query']))
+        {
+	    parse_str($parsed['query'],$parsed);
+	    $videoID = $parsed['v'];
+        } elseif (isset($parsed['path'])) {
+            $videoID = str_replace("/","",$parsed['path']);
+        }
+        return($videoID);
     }
 
-    //recordingDetails are only returned for authenticated requests, apparently!
-    //or maybe users can hide them from the public.
+    private static function _addPlayerElement() {
+        if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+            return;
 
-    $dateRecorded = "";
-    if(!empty($recordingDetails['RecordingDate']))
-      $dateRecorded = $recordingDetails['RecordingDate'];
-
-    $spatialCoverage = "";
-    if(!empty($recordingDetails['locationDescription']))
-       $spatialCoverage .= $recordingDetails['locationDescription']."<br>";
-    if(!empty($recordingDetails['locationDescription']))
-       $spatialCoverage .= $recordingDetails['locationDescription']."<br>";
+        $db = get_db();
+        $table = $db->getTable('ItemType');
+        $mpType = $table->findByName('Moving Image');
+        if(!is_object($mpType)) {
+            $mpType = new ItemType();
+            $mpType->name = "Moving Image";
+            $mpType->description = "A series of visual representations imparting an impression of motion when shown in succession. Examples include animations, movies, television programs, videos, zoetropes, or visual output from a simulation.";
+            $mpType->save();
+        }
+        $mpType->addElements(array(
+            array(
+                'name'=>'Player',
+                'description'=>'html for embedded player to stream video content'
+            )
+        ));
+        $mpType->save();
+    }
     
-    if(!empty($recordingDetails['location']))
-      foreach($recordingDetails['location'] as $label=>$number)
-	$spatialCoverage .= "$label = $number<br>";
+    /**
+     *Fetch metadata from a Youtube video and prepare it
+     *
+     *@param string $itemID The Youtube video ID from which to extract metadata
+     *@param object $service The youtube API php interface instance
+     *@param int $collection The ID of the collection to which to add the new item
+     *@param string $ownerRole The name of the dublin core field to which to 
+     *add the Youtube user info
+     *@param boolean public Indicates whether the new omeka item should be public
+     *@return array An array containing metadata associated with the 
+     *given youtube video in the correct format to save as an omeka item,
+     *and urls of files associated
+     */
+    public static function GetVideo($itemID,$service,$collection=0,$ownerRole='Publisher',$public=0)
+    {
 
-    $publisher = "";
-    if(!empty($video['snippet']['channelTitle']))
-       $publisher .= $video['snippet']['channelTitle']."<br>published via YouTube.com"; 
-    
+        $part = "id,snippet,contentDetails,player,status,recordingDetails";
+        
+        $response = $service->videos->listVideos($part, array(
+	    'id'=>$itemID,
+	    'maxResults'=>1
+	));
+        
+        if (empty($response)) 
+            throw new Exception("No video found."); 
 
-    if(isset($video['status']['license']))
-      {
-	switch($video['status']['license']) 
-	  {
-	  case "youtube":
-	    $license = '<a href="https://www.youtube.com/static?template=terms">Standard YouTube License</a>';
-	    break;
+        $items = $response->items;
 
-	  case "creativeCommon":
-	      $license='<a href="http://creativecommons.org/licenses/by/3.0/legalcode">Creative Commons License</a>';
-	    break;
+        if (empty($items)) 
+            throw new Exception('No video found for itemID '.$itemID);
 
-	  default:
-	    $license="";
+        $video = $items[0];
 
-	  }
-      } else { $license = ""; }
-    
+        //todo format date if necessary
+        $datePublished = $video['snippet']['publishedAt'];
 
-    if ($video['contentDetails']['licensedContent'])
-      {
-	$license .= "<br>This video represents licensed content on YouTube, meaning that the content has been claimed by a YouTube content partner.";
-	$rightsHolder = "Rights reserved by a third party";
-      }else
-      {
-	$rightsHolder = "";
-      }
+        try{
+            $recordingDetails = $video['recordingDetails'];
+        } catch (Exception $e) {
+            die('exception');
+            $recordingDetails = array();
+        }
 
-    $maps = array(
-		  "Dublin Core"=>array(
-				       "Title"=>array($video['snippet']['title']),
-				       "Description"=>array($video['snippet']['description']),
-				       "Date"=>array($datePublished),
-				       "Source"=>array('http://YouTube.com'),
-				       "Rights"=>array($license)
-				       )
-		  );
+        //recordingDetails are only returned for authenticated requests, apparently!
+        //or maybe users can hide them from the public.
 
-    if(!empty($ownerRole))
-      $maps['Dublin Core'][$ownerRole]=array($publisher);
+        $dateRecorded = "";
+        if(!empty($recordingDetails['RecordingDate']))
+            $dateRecorded = $recordingDetails['RecordingDate'];
 
-    if (plugin_is_active('DublinCoreExtended'))
-      {
-	$maps["Dublin Core"]["License"]=array($license);
-	$maps["Dublin Core"]["Rights Holder"]=array($rightsHolder);
-	$maps["Dublin Core"]["Date Submitted"]=array($datePublished);
-	//$maps["Dublin Core"]["Date Created"]=array($dateRecorded);
-	//$maps["Dublin Core"]["Spatial Coverage"]=array($spatialCoverage);
-      }
+        $spatialCoverage = "";
+        if(!empty($recordingDetails['locationDescription']))
+            $spatialCoverage .= $recordingDetails['locationDescription']."<br>";
+        if(!empty($recordingDetails['locationDescription']))
+            $spatialCoverage .= $recordingDetails['locationDescription']."<br>";
+        
+        if(!empty($recordingDetails['location']))
+            foreach($recordingDetails['location'] as $label=>$number)
+	        $spatialCoverage .= "$label = $number<br>";
 
-    if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-        static::_addPlayerElement();
-//      throw new Exception('Metadata element missing for embedded video html');
+        $publisher = "";
+        if(!empty($video['snippet']['channelTitle']))
+            $publisher .= $video['snippet']['channelTitle']."<br>published via YouTube.com"; 
+        
 
-    $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
+        if(isset($video['status']['license']))
+        {
+	    switch($video['status']['license']) 
+	    {
+	        case "youtube":
+	        $license = '<a href="https://www.youtube.com/static?template=terms">Standard YouTube License</a>';
+	        break;
 
-    $maps[ElementSet::ITEM_TYPE_NAME]["Player"]=array($playerHtml);
-      
-    $Elements = array();
+	        case "creativeCommon":
+	        $license='<a href="http://creativecommons.org/licenses/by/3.0/legalcode">Creative Commons License</a>';
+	        break;
 
-    $db = get_db();
-    $elementTable = $db->getTable('Element');
-    
-    foreach ($maps as $elementSet=>$elements)
-      {
-	foreach($elements as $elementName => $elementTexts)
-	  {
-	    $element = $elementTable->findByElementSetNameAndElementName($elementSet,$elementName);
-	    $elementID = $element->id;
+	        default:
+	        $license="";
 
-	    $Elements[$elementID] = array();
-	    if(is_array($elementTexts))
-	      {
-		foreach($elementTexts as $elementText)
-		  {
-		    //check for html tags
-                      if($elementText != strip_tags($elementText)) {
-		      //element text has html tags
-		      $html = "1";
-		    }else {
-		      //plain text or other non-html object
-		      $html = "0";
+	    }
+        } else { $license = ""; }
+        
+
+        if ($video['contentDetails']['licensedContent'])
+        {
+	    $license .= "<br>This video represents licensed content on YouTube, meaning that the content has been claimed by a YouTube content partner.";
+	    $rightsHolder = "Rights reserved by a third party";
+        }else
+        {
+	    $rightsHolder = "";
+        }
+
+        $maps = array(
+	    "Dublin Core"=>array(
+		"Title"=>array($video['snippet']['title']),
+		"Description"=>array($video['snippet']['description']),
+		"Date"=>array($datePublished),
+		"Source"=>array('http://YouTube.com'),
+		"Rights"=>array($license)
+	    )
+	);
+
+        if(!empty($ownerRole))
+            $maps['Dublin Core'][$ownerRole]=array($publisher);
+
+        if (plugin_is_active('DublinCoreExtended'))
+        {
+	    $maps["Dublin Core"]["License"]=array($license);
+	    $maps["Dublin Core"]["Rights Holder"]=array($rightsHolder);
+	    $maps["Dublin Core"]["Date Submitted"]=array($datePublished);
+	    //$maps["Dublin Core"]["Date Created"]=array($dateRecorded);
+	    //$maps["Dublin Core"]["Spatial Coverage"]=array($spatialCoverage);
+        }
+
+        if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+            static::_addPlayerElement();
+        //      throw new Exception('Metadata element missing for embedded video html');
+
+        $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
+
+        $maps[ElementSet::ITEM_TYPE_NAME]["Player"]=array($playerHtml);
+        
+        $Elements = array();
+
+        $db = get_db();
+        $elementTable = $db->getTable('Element');
+        
+        foreach ($maps as $elementSet=>$elements)
+        {
+	    foreach($elements as $elementName => $elementTexts)
+	    {
+	        $element = $elementTable->findByElementSetNameAndElementName($elementSet,$elementName);
+	        $elementID = $element->id;
+
+	        $Elements[$elementID] = array();
+	        if(is_array($elementTexts))
+	        {
+		    foreach($elementTexts as $elementText)
+		    {
+		        //check for html tags
+                        if($elementText != strip_tags($elementText)) {
+		            //element text has html tags
+		            $html = "1";
+		        }else {
+		            //plain text or other non-html object
+		            $html = "0";
+		        }
+
+		        $Elements[$elementID][] = array(
+			    'text' => $elementText,
+			    'html' => $html
+			);
 		    }
+	        }
+	    }
+        }
 
-		    $Elements[$elementID][] = array(
-						    'text' => $elementText,
-						    'html' => $html
-						    );
-		  }
-	      }
-	  }
-      }
+        $tags = "";
+        if(isset($video['snippet']->tags))
+        {
+	    foreach($video['snippet']->tags as $tag)
+	    {
+	        $tags .= $tag;
+	        $tags .=",";
+	    }
+            
+	    $tags = substr($tags,0,-2);
+        }
+        $returnPost = array(
+	    'Elements'=>$Elements,
+	    'item_type_id'=>'3',      //a moving image
+	    'tags-to-add'=>$tags,
+	    'tags-to-delete'=>'',
+	    'collection_id'=>$collection
+	);
+        if($public)
+            $returnPost['public']="1";
 
-    $tags = "";
-    if(isset($video['snippet']->tags))
-      {
-	foreach($video['snippet']->tags as $tag)
-	  {
-	    $tags .= $tag;
-	    $tags .=",";
-	  }
-    
-	$tags = substr($tags,0,-2);
-      }
-    $returnPost = array(
-			 'Elements'=>$Elements,
-			 'item_type_id'=>'3',      //a moving image
-			 'tags-to-add'=>$tags,
-			 'tags-to-delete'=>'',
-			 'collection_id'=>$collection
-			 );
-    if($public)
-      $returnPost['public']="1";
+        $i=0;
+        $maxwidth=0;
+        foreach($video['snippet']->thumbnails as $key => $file)
+        {
+	    if($file['width']>$maxwidth)
+	        $i = $key;
+        }
 
-    $i=0;
-    $maxwidth=0;
-    foreach($video['snippet']->thumbnails as $key => $file)
-      {
-	if($file['width']>$maxwidth)
-	  $i = $key;
-      }
+        $returnFiles = array($video['snippet']->thumbnails->default->url);
 
-    $returnFiles = array($video['snippet']->thumbnails->default->url);
+        return(array(
+	    'post' => $returnPost,
+	    'files' => $returnFiles
+	));
 
-    return(array(
-		 'post' => $returnPost,
-		 'files' => $returnFiles
-		 ));
-
-  }
+    }
 
 
 }
