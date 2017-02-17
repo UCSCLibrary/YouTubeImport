@@ -158,9 +158,6 @@ class YoutubeImport_ImportHelper
 	    $rightsHolder = "";
         }
 
-        echo "death throes:<br><pre>";
-        print_r($video);
-        die("</pre>");
         $maps = array(
 	    "Dublin Core"=>array(
 		"Title"=>array($video['snippet']['title']),
