@@ -33,34 +33,36 @@ class Youtube_Form_Import extends Omeka_Form
     {
       //URL:
       $this->addElement('text', 'youtubeurl', array(
-						    'label'         => __('YouTube URL'),
+	                                            'label'         => __('YouTube URL'),
 						    'description'   => __('Paste the full URL of the YouTube video you would like to import'),
 						    'validators'    =>array(
 									    array('callback',false,array('callback'=>array($this,'validateYoutubeUrl'),'options'=>array()))
 									    ),
 						    'order'         => 1,
-						    'required'      => true
+						    'required'      => true,
+                                                    'title'         => 'Copy the URL from your browser’s URL bar or the YouTube “share” link'
 						    )
 			);
 
 	// Collection:
         $this->addElement('select', 'youtubecollection', array(
 							'label'         => __('Collection'),
-							'description'   => __('To which collection would you like to add the YouTube video?'),
+							'description'   => __('Select a collection'),
 							'value'         => '0',
 							'order'         => 2,
 							'multiOptions'       => $this->_getCollectionOptions()
 							)
 			  );
 
-	// User Role:
+	// Responsibility (User Role):
         $this->addElement('select', 'youtubeuserrole', array(
-								'label'         => __('User Role'),
-								'description'   => __('Which role does the YouTube user/channel play in the creation of the new Omeka item?'),
+								'label'         => __('Responsibility'),
+								'description'   => __('The YouTube user / channel is the ______ of the video'),
 								'value'         => 'Publisher',
 								'order'         => 3,
 								
-								'multiOptions'       => $this->_getRoleOptions()
+								'multiOptions'       => $this->_getRoleOptions(),
+                                                                'title' => 'This will determine the Dublin Core field in which the YouTube user/channel name will appear.'
 								)
 			  );
 
@@ -318,8 +320,6 @@ class Youtube_Form_Import extends Omeka_Form
       
       return true;
     }
-
-
-
-
 }
+
+

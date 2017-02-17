@@ -1,5 +1,7 @@
 jQuery(window).load(function() {
 
+  jQuery("body.you-tube-import").tooltip();
+
   jQuery( "#youtube-success-dialog" ).dialog({
     height: 0,
     width: 250,
