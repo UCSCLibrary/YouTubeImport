@@ -158,12 +158,15 @@ class YoutubeImport_ImportHelper
 	    $rightsHolder = "";
         }
 
+        echo "death throes:<br><pre>";
+        print_r($video);
+        die("</pre>");
         $maps = array(
 	    "Dublin Core"=>array(
 		"Title"=>array($video['snippet']['title']),
 		"Description"=>array($video['snippet']['description']),
 		"Date"=>array($datePublished),
-		"Source"=>array('http://YouTube.com'),
+		"Source"=>array('http://youtu.be/'.$video['id']),
 		"Rights"=>array($license)
 	    )
 	);
