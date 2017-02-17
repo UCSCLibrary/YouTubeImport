@@ -116,16 +116,13 @@ class Youtube_Form_Import extends Omeka_Form
       try {
 
 	if(self::_importSingle())
-	  return('Your video was imported into Omeka successfully');
+	  return('Go to Items or Collections to view imported videos.');
 
       } catch(Exception $e) {
 	throw new Exception('Error importing video. '.$e->getMessage());
       }
-
       return(true);
-
     }
-
 
     /**
    * Import a single video in real time (not in the background).
