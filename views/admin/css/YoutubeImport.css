@@ -2,3 +2,13 @@ iframe {
     max-height: 275px;
     max-width: 400px;
 }
+
+ 
+.youtube-success-dialog {
+    font-size: 2em;
+    border: 2px solid green;
+}
+
+#youtube-success-dialog{
+    padding: 0px;
+}

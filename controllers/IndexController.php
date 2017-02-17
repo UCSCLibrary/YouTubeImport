@@ -43,8 +43,10 @@ class YouTubeImport_IndexController extends Omeka_Controller_AbstractActionContr
             $flashMessenger->addMessage($e->getMessage(),'error');
         }
 
-        if(isset($successMessage))
+        if(isset($successMessage)) {
             $flashMessenger->addMessage($successMessage,'success');
+            $this->view->successDialog = true;
+        }
         $this->view->form = $form;
 
     }
