@@ -17,7 +17,9 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
     protected $_hooks = array(
         'define_acl',
         'install',
+        'upgrade',
         'admin_head',
+        'public_head',
         'after_save_item',
         'config',
         'config_form'
@@ -26,12 +28,19 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
   /**
    * @var array Filters for the plugin.
    */
-    protected $_filters = array('admin_navigation_main','filterElement'=>array('Display','Item',"Item Type Metadata","Player"),'display_elements');
+    protected $_filters = array('admin_navigation_main',
+                                'filterElement'=>array('Display',
+                                                       'Item',
+                                                       "Item Type Metadata",
+                                                       "Player"),
+                                'display_elements');
 
   /**
    * @var array Options for the plugin.
    */
     protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
+
+
 
     public function hookAfterSaveItem($args){
         if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')) {          
@@ -50,12 +59,15 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 
     public function filterDisplayElements($elementSets){
 
+        //if there is not a current item record for this page, do nothing
         if(! $item = get_current_record('item', false))
             return $elementSets;
 
+        // if there is no youtube player on this item, do nothing
         if(!metadata($item,array('Item Type Metadata','Player')))
             return $elementSets;
         
+        //loop through all metadata elements and extract the "Player"
         $newElementSets = array();
         foreach ($elementSets as $set => $elements) {
             $newElements = $elements;
@@ -64,17 +76,20 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
                 foreach ($elements as $key => $element) {
                     if($key==="Player") 
                         $playerElement = $element;
-                     else 
+//                    else if ($key==="Imported Thumbnail")
+//                        $thumbElement = $element;
+                    else 
                         $newElements[$key] = $element;
                 }
-            }           
+            }  
             $newElementSets[$set] = $newElements;
         }
 
+        //if the player element was found, put it in its own section
+        //at the top and then include the rest of the metadata as normal
         if(isset($playerElement))
-            return array_merge(array('Player'=>array(''=>$playerElement)),$newElementSets);
-        else
-            return $elementSets;
+            return array_merge(array(''=>array(''=>$playerElement)),$newElementSets);
+        return $elementSets;
     }
 
   /**
@@ -84,24 +99,13 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
    *@return void
    */
   public function hookInstall(){
-      if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-          return;
+      YoutubeImport_ImportHelper::CreateThumbnailElement;
+  }
 
-      $db = get_db();
-      $table = $db->getTable('ItemType');
-      $mpType = $table->findByName('Moving Image');
-      if(!is_object($mpType)) {
-          $mpType = new ItemType();
-          $mpType->name = "Moving Image";
-          $mpType->description = "A series of visual representations imparting an impression of motion when shown in succession. Examples include animations, movies, television programs, videos, zoetropes, or visual output from a simulation.";
-      }
-      $mpType->addElements(array(
-          array(
-              'name'=>'Player',
-              'description'=>'html for embedded player to stream video content'
-          )
-      ));
-      $mpType->save();
+  public function hookUpgrade($oldVersion,$newVersion){
+      if($oldVersion < 1.2) {
+          YoutubeImport_ImportHelper::CreateThumbnailElement;
+      }          
   }
 
   /**
@@ -118,7 +122,20 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
       }
       queue_css_file('YoutubeImport');
   }
-  
+  /**
+   *When the plugin loads on the public side, 
+   *queue the css & js files
+   *
+   *@return void
+   */
+  public function hookPublicHead(){
+      queue_js_file('YoutubeImport');
+  }
+
+
+    /**
+     * Handle the result of the plugin config form
+     */
     public function hookConfig() {
         if(isset($_REQUEST['youtube_width']))
             set_option('youtube_width',$_REQUEST['youtube_width']);

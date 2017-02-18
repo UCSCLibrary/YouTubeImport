@@ -43,8 +43,16 @@ class YoutubeImport_ImportHelper
         return($videoID);
     }
 
-    private static function _addPlayerElement() {
-        if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+    public static function CreatePlayerElement(){
+        static::_createElement('Player','html for embedded player to stream video content');
+    }
+    public static function CreateThumbnailElement(){
+        die('test');
+        static::_createElement('Imported Thumbnail','If a thumbnail images was imported for an embedded video, its id is recorded here and the thumbnail is hidden on pages displaying the embedded video itself.');
+    }
+
+    private static function _createElement($name,$description) {
+        if(element_exists(ElementSet::ITEM_TYPE_NAME,$name))
             return;
 
         $db = get_db();
@@ -58,10 +66,8 @@ class YoutubeImport_ImportHelper
         }
         $mpType->addElements(array(
             array(
-                'name'=>'Player',
-                'description'=>'html for embedded player to stream video content'
-            )
-        ));
+                'name'=>$name,
+                'description'=>$description)));
         $mpType->save();
     }
     
@@ -181,12 +187,14 @@ class YoutubeImport_ImportHelper
         }
 
         if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-            static::_addPlayerElement();
-        //      throw new Exception('Metadata element missing for embedded video html');
+            static::CreatePlayerElement();
+        if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Imported Thumbnail'))
+            static::CreateThumbnailElement();
 
         $playerHtml = str_replace('/>','></iframe>',$video['player']['embedHtml']);
 
         $maps[ElementSet::ITEM_TYPE_NAME]["Player"]=array($playerHtml);
+        $maps[ElementSet::ITEM_TYPE_NAME]["Imported Thumbnail"]=array($video['snippet']->thumbnails->default->url);
         
         $Elements = array();
 
@@ -243,14 +251,6 @@ class YoutubeImport_ImportHelper
 	);
         if($public)
             $returnPost['public']="1";
-
-        $i=0;
-        $maxwidth=0;
-        foreach($video['snippet']->thumbnails as $key => $file)
-        {
-	    if($file['width']>$maxwidth)
-	        $i = $key;
-        }
 
         $returnFiles = array($video['snippet']->thumbnails->default->url);
 
