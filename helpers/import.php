@@ -47,7 +47,6 @@ class YoutubeImport_ImportHelper
         static::_createElement('Player','html for embedded player to stream video content');
     }
     public static function CreateThumbnailElement(){
-        die('test');
         static::_createElement('Imported Thumbnail','If a thumbnail images was imported for an embedded video, its id is recorded here and the thumbnail is hidden on pages displaying the embedded video itself.');
     }
 

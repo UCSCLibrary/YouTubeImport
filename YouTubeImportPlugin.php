@@ -11,9 +11,9 @@
  */
 class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 {
-  /**
-   * @var array Hooks for the plugin.
-   */
+    /**
+     * @var array Hooks for the plugin.
+     */
     protected $_hooks = array(
         'define_acl',
         'install',
@@ -25,37 +25,38 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
         'config_form'
     );
 
-  /**
-   * @var array Filters for the plugin.
-   */
+    /**
+     * @var array Filters for the plugin.
+     */
     protected $_filters = array('admin_navigation_main',
                                 'filterElement'=>array('Display',
                                                        'Item',
                                                        "Item Type Metadata",
                                                        "Player"),
-                                'display_elements');
+                                'display_elements',
+                                'exhibit_attachment_markup');
 
-  /**
-   * @var array Options for the plugin.
-   */
+    /**
+     * @var array Options for the plugin.
+     */
     protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
 
 
 
     public function hookAfterSaveItem($args){
         if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')) {          
-          $item = $args['record'];                                
-          $element = $this->_db->getTable("Element")->findByElementSetNameAndElementName('Item Type Metadata',"Player");
-          if($players = $this->_db->getTable("ElementText")->findBy(array('record_id'=>$item->id,'element_id'=>$element->id))) {
-              if(!is_array($players))
-                  $players = array($players);
-              foreach ($players as $player) {
-                  $player->html = 1;
-                  $player->save();
-              }
-          }
-      }
-  }
+            $item = $args['record'];                                
+            $element = $this->_db->getTable("Element")->findByElementSetNameAndElementName('Item Type Metadata',"Player");
+            if($players = $this->_db->getTable("ElementText")->findBy(array('record_id'=>$item->id,'element_id'=>$element->id))) {
+                if(!is_array($players))
+                    $players = array($players);
+                foreach ($players as $player) {
+                    $player->html = 1;
+                    $player->save();
+                }
+            }
+        }
+    }
 
     public function filterDisplayElements($elementSets){
 
@@ -76,8 +77,8 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
                 foreach ($elements as $key => $element) {
                     if($key==="Player") 
                         $playerElement = $element;
-//                    else if ($key==="Imported Thumbnail")
-//                        $thumbElement = $element;
+                    //                    else if ($key==="Imported Thumbnail")
+                    //                        $thumbElement = $element;
                     else 
                         $newElements[$key] = $element;
                 }
@@ -92,45 +93,107 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
         return $elementSets;
     }
 
-  /**
-   *When the plugin installs, create a new metadata element
-   *called Player associated with Moving Pictures
-   *
-   *@return void
-   */
-  public function hookInstall(){
-      YoutubeImport_ImportHelper::CreateThumbnailElement;
-  }
+    /**
+     *When the plugin installs, create a new metadata element
+     *called Player associated with Moving Pictures
+     *
+     *@return void
+     */
+    public function hookInstall(){
+        YoutubeImport_ImportHelper::CreateThumbnailElement;
+    }
 
-  public function hookUpgrade($oldVersion,$newVersion){
-      if($oldVersion < 1.2) {
-          YoutubeImport_ImportHelper::CreateThumbnailElement;
-      }          
-  }
+    public function hookUpgrade($oldVersion,$newVersion){
+        if($oldVersion < 1.2) {
+            YoutubeImport_ImportHelper::CreateThumbnailElement;
+        }          
+    }
 
-  /**
-   *When the plugin loads on the admin side, 
-   *queue the css file
-   *
-   *@return void
-   */
-  public function hookAdminHead(){
-      if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')){
-          $playerElement = $this->_db->getTable("Element")->findByElementSetNameAndElementName("Item Type Metadata","Player");
-          queue_js_string("var playerElementId = ".$playerElement->id.';');
-          queue_js_file('YoutubeImport');
-      }
-      queue_css_file('YoutubeImport');
-  }
-  /**
-   *When the plugin loads on the public side, 
-   *queue the css & js files
-   *
-   *@return void
-   */
-  public function hookPublicHead(){
-      queue_js_file('YoutubeImport');
-  }
+    /**
+     *When the plugin loads on the admin side, 
+     *queue the css file
+     *
+     *@return void
+     */
+    public function hookAdminHead(){
+        if(element_exists(ElementSet::ITEM_TYPE_NAME,'Player')){
+            $playerElement = $this->_db->getTable("Element")->findByElementSetNameAndElementName("Item Type Metadata","Player");
+            queue_js_string("var playerElementId = ".$playerElement->id.';');
+            queue_js_file('YoutubeImport');
+        }
+        queue_css_file('YoutubeImport');
+    }
+
+    /**
+     *When the plugin loads on the public side, 
+     *queue the css & js files
+     *
+     *@return void
+     */
+    public function hookPublicHead(){
+        queue_js_file('YoutubeImport');
+        queue_css_file('YoutubeImport');
+    }
+
+
+    /**
+     * Display video widgets instead of thumbnails for youtube objects, 
+     *queue the css & js files
+     *
+     *@return void
+     */    
+    public function filterExhibitAttachmentMarkup($html,$args){
+
+        //do nothing if the iframe is already displayed 
+        // (for example, by the vimeo import plugin)
+        if(strpos($html,'iframe'))
+            return $html;
+
+        // Do not break if the plugin hasn't installed correctly
+        if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+            return $html;
+
+        //Retrieve the item being attached
+        $attachment = $args['attachment'];
+        $item = $attachment->getItem();
+
+        // do nothing unless the item has a player element defined
+        if(!$player = metadata($item,array("Item Type Metadata","Player")))
+            return $html;
+        
+        //get the file that would display with the attachment
+        $file = $attachment->getFile();        
+        //get the imported thumbnail filename saved with the item
+        $thumb = metadata($item,array("Item Type Metadata","Imported Thumbnail"));
+        
+        //if the attachment image is not the imported thumbnail,
+        // do nothing (let the thumbnail display as usual)
+        if($file->getProperty('filename') != $thumb && $file->getProperty('original_filename') != $thumb)
+            return $html;
+
+        //otherwise, replace the thumbnail with the player
+        $dom = new DOMDocument;
+        $dom->loadHTML($html);        
+        $playerElement = $this->createElementFromHtml($player,$dom);
+        $imgs= $dom->getElementsByTagName('img');
+        foreach($imgs as $i) $img = $i;
+        $video = $img->parentNode->replaceChild($playerElement,$img);
+        $html = $dom->saveHTML();
+        
+        //add a default caption if necessary
+        if (!is_string($attachment['caption']) || $attachment['caption'] == '')
+            $html.='<div class="exhibit-item-caption">'.exhibit_builder_link_to_exhibit_item("<p>See more information about this video</p>",array(),$item).'</div>';
+        
+        return $html;
+    }
+
+
+    public function createElementFromHtml($html,$dom) {
+        $tmpDoc = new DOMDocument();
+        $tmpDoc->loadHTML($html);
+        foreach ($tmpDoc->getElementsByTagName('body')->item(0)->childNodes as $node) 
+            return  $dom->importNode($node);
+    }
 
 
     /**
@@ -148,44 +211,44 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
     }
 
 
-  /**
-   * Define the plugin's access control list.
-   *
-   *@param array $args Arguments passed from Zend
-   *@return void
-   */
-  public function hookDefineAcl($args)
-  {
-    $args['acl']->addResource('YoutubeImport_Index');
-    $args['acl']->allow('contributor','YoutubeImport_Index');
-  }
+    /**
+     * Define the plugin's access control list.
+     *
+     *@param array $args Arguments passed from Zend
+     *@return void
+     */
+    public function hookDefineAcl($args)
+    {
+        $args['acl']->addResource('YoutubeImport_Index');
+        $args['acl']->allow('contributor','YoutubeImport_Index');
+    }
 
-   
-  /**
-   * Add the Youtube Import link to the admin main navigation.
-   * 
-   * @param array $nav Navigation array.
-   * @return array $nav Filtered navigation array.
-   */
-  public function filterAdminNavigationMain($nav)
-  {
-    $nav[] = array(
-		   'label' => __('YouTube Import'),
-		   'uri' => url('you-tube-import'),
-		   'resource' => 'YoutubeImport_Index',
-		   'privilege' => 'index'
-		   );
-    return $nav;
-  }
+    
+    /**
+     * Add the Youtube Import link to the admin main navigation.
+     * 
+     * @param array $nav Navigation array.
+     * @return array $nav Filtered navigation array.
+     */
+    public function filterAdminNavigationMain($nav)
+    {
+        $nav[] = array(
+	    'label' => __('YouTube Import'),
+	    'uri' => url('you-tube-import'),
+	    'resource' => 'YoutubeImport_Index',
+	    'privilege' => 'index'
+	);
+        return $nav;
+    }
 
-  public function filterElement($text,$args) {
-      if(strpos($text,'iframe') > 0) {
-          $wpo = strpos($text,'width=')+7;
-          $text = substr_replace($text,get_option('youtube_width'),$wpo,3);
-          $hpo = strpos($text,'height=')+8;
-          $text = substr_replace($text,get_option('youtube_height'),$hpo,3);
-      }
-      return $text;
-  }
+    public function filterElement($text,$args) {
+        if(strpos($text,'iframe') > 0) {
+            $wpo = strpos($text,'width=')+7;
+            $text = substr_replace($text,get_option('youtube_width'),$wpo,3);
+            $hpo = strpos($text,'height=')+8;
+            $text = substr_replace($text,get_option('youtube_height'),$hpo,3);
+        }
+        return $text;
+    }
     
 }
