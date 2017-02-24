@@ -77,8 +77,6 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
                 foreach ($elements as $key => $element) {
                     if($key==="Player") 
                         $playerElement = $element;
-                    //                    else if ($key==="Imported Thumbnail")
-                    //                        $thumbElement = $element;
                     else 
                         $newElements[$key] = $element;
                 }
@@ -187,14 +185,14 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
         return $html;
     }
 
-
     public function createElementFromHtml($html,$dom) {
         $tmpDoc = new DOMDocument();
+        libxml_use_internal_errors(true);
         $tmpDoc->loadHTML($html);
+        libxml_clear_errors();
         foreach ($tmpDoc->getElementsByTagName('body')->item(0)->childNodes as $node) 
             return  $dom->importNode($node);
     }
-
 
     /**
      * Handle the result of the plugin config form
