@@ -98,12 +98,14 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
      *@return void
      */
     public function hookInstall(){
-        YoutubeImport_ImportHelper::CreateThumbnailElement;
+        include_once(dirname(__FILE__).'/helpers/import.php');
+        YoutubeImport_ImportHelper::CreateThumbnailElement();
     }
 
     public function hookUpgrade($oldVersion,$newVersion){
         if($oldVersion < 1.2) {
-            YoutubeImport_ImportHelper::CreateThumbnailElement;
+            include_once(dirname(__FILE__).'/helpers/import.php');
+            YoutubeImport_ImportHelper::CreateThumbnailElement();
         }          
     }
 
