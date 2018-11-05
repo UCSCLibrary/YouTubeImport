@@ -22,7 +22,8 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
         'public_head',
         'after_save_item',
         'config',
-        'config_form'
+        'config_form',
+	'initialize'
     );
 
     /**
@@ -41,6 +42,10 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
      */
     protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
 
+	
+    public function hookInitialize(){
+        require_once(dirname(__FILE__)."/helpers/import.php");
+    }
 
 
     public function hookAfterSaveItem($args){
