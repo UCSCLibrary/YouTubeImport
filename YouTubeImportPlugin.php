@@ -68,7 +68,11 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
         //if there is not a current item record for this page, do nothing
         if(! $item = get_current_record('item', false))
             return $elementSets;
-
+	    
+	//if there is no "player" element installed, do nothing
+        if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+	    return $elementSets	
+		
         // if there is no youtube player on this item, do nothing
         if(!metadata($item,array('Item Type Metadata','Player')))
             return $elementSets;
