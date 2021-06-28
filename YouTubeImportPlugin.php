@@ -71,7 +71,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
 	    
 	//if there is no "player" element installed, do nothing
         if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
-	    return $elementSets	
+	        return $elementSets;
 		
         // if there is no youtube player on this item, do nothing
         if(!metadata($item,array('Item Type Metadata','Player')))
@@ -107,14 +107,16 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
      *@return void
      */
     public function hookInstall(){
+        include_once(dirname(__FILE__).'/helpers/import.php');
         YoutubeImport_ImportHelper::CreateThumbnailElement;
         YoutubeImport_ImportHelper::CreatePlayerElement;
     }
 
     public function hookUpgrade($oldVersion,$newVersion){
+        include_once(dirname(__FILE__).'/helpers/import.php');
         if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Imported Thumbnail'))
             YoutubeImport_ImportHelper::CreateThumbnailElement;
-	if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
+	    if(!element_exists(ElementSet::ITEM_TYPE_NAME,'Player'))
             YoutubeImport_ImportHelper::CreatePlayerElement;              
     }
 
