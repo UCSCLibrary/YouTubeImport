@@ -141,7 +141,7 @@ class Youtube_Form_Import extends Omeka_Form
 
         $client = new Google_Client();
         $client->setApplicationName("Omeka_Youtube_Import");
-        $client->setDeveloperKey(YoutubeImport_ImportHelper::$youtube_api_key);
+        $client->setDeveloperKey(YoutubeImport_ImportHelper::getApiKey());
   	
         try{
 	    $service = new Google_Service_YouTube($client);

@@ -15,9 +15,11 @@ class YoutubeImport_ImportHelper
 {
     
     /**
-     * @var string Youtube API key for this plugin
+     * @return $string Youtube API key for this plugin
      */
-    public static $youtube_api_key = 'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w';
+    public function getApiKey(){
+        return get_option('youtube_apikey');
+    }
     
     /**
      * @var string Google app name associated with this plugin

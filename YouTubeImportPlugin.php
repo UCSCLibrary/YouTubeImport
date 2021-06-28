@@ -40,7 +40,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
     /**
      * @var array Options for the plugin.
      */
-    protected $_options = array('youtube_width'=>640,'youtube_height'=>360);
+    protected $_options = array('youtube_width'=>640,'youtube_height'=>360, 'youtube_apikey'=>'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w');
 
 	
     public function hookInitialize(){
@@ -215,6 +215,8 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
             set_option('youtube_width',$_REQUEST['youtube_width']);
         if(isset($_REQUEST['youtube_height']))
             set_option('youtube_height',$_REQUEST['youtube_height']);
+        if(isset($_REQUEST['youtube_apikey']))
+            set_option('youtube_apikey', $_REQUEST['youtube_apikey']);
     }
 
     public function hookConfigForm(){
