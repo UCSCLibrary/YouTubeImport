@@ -40,7 +40,7 @@ class YouTubeImportPlugin extends Omeka_Plugin_AbstractPlugin
     /**
      * @var array Options for the plugin.
      */
-    protected $_options = array('youtube_width'=>640,'youtube_height'=>360, 'youtube_apikey'=>'AIzaSyDI8ApsA7MBIK4M1Ubs9k4-Rk7_KOeYJ5w');
+    protected $_options = array('youtube_width'=>640,'youtube_height'=>360, 'youtube_apikey'=>'');
 
 	
     public function hookInitialize(){
