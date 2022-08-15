@@ -1,4 +1,4 @@
-jQuery(window).load(function() {
+jQuery(document).ready(function() {
 
   jQuery("body.you-tube-import form").tooltip();
 
